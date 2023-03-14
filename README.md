@@ -23,6 +23,9 @@ In diesem Spiel spielen die **`Spieler`** zusammen gegen den **`Dealer`**.
 - - > Anzahl der Runden
 - - > Anzahl der Spieler (1-4)
 - - > Passwort falls privat
+- > Sitzung (private/öffentlich) beitreten
+- - > Passwort falls privat
 - > Spielablauf 
 - > Statistik (Punkte) aller Spieler dieser Sitzung
 
+![](./img/GameLayout/GameSteps.png)

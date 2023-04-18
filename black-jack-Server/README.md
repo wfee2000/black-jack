@@ -28,4 +28,4 @@ In diesem Spiel spielen die **`Spieler`** zusammen gegen den **`Dealer`**.
 - > Spielablauf 
 - > Statistik (Punkte) aller Spieler dieser Sitzung
 
-![](./img/GameLayout/GameSteps.png)
+![](../JavaProject/black-jack-Server/img/GameLayout/GameSteps.png)

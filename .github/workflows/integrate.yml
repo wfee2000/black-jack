@@ -19,7 +19,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build
-        run: mvn -f server/pom.xml -DskipTests package
+        run: mvn -f server/pom.xml package
 
       - name: Test
         run: mvn -f server/pom.xml test

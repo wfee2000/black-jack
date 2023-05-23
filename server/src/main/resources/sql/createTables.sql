@@ -11,7 +11,7 @@ CREATE TABLE GAME(
     constraint PK_gameKey PRIMARY KEY (game_id)
 );
 
-CREATE TABLE GAMEPARTICIPATION(
+CREATE TABLE GAME_PARTICIPATION(
     user_name varchar(100) not null,
     game_id INTEGER not null,
     user_points INTEGER,

@@ -2,7 +2,8 @@ name: Test Project
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   test_pull_request:

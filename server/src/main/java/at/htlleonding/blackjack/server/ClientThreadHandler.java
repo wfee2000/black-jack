@@ -29,7 +29,8 @@ public class ClientThreadHandler extends Thread {
                 if (!isLoggedIn) {
                     switch (command) {
                         case "login" -> {
-                            if (login(clientMessageWrapper)) {
+                            name = login(clientMessageWrapper);
+                            if (name != null) {
                                 isLoggedIn = true;
                             } else {
                                 client.close();
@@ -37,7 +38,8 @@ public class ClientThreadHandler extends Thread {
                             }
                         }
                         case "register" -> {
-                            if (register(clientMessageWrapper)) {
+                            name = register(clientMessageWrapper);
+                            if (name != null) {
                                 isLoggedIn = true;
                             } else {
                                 client.close();
@@ -47,9 +49,10 @@ public class ClientThreadHandler extends Thread {
                     }
                 } else {
                     switch (command) {
-                        case "quit":
+                        case "quit" -> {
                             client.close();
                             return;
+                        }
                     }
                 }
             }
@@ -58,31 +61,35 @@ public class ClientThreadHandler extends Thread {
         }
     }
 
-    public static boolean login(JSONObject messageWrapper) {
+    public static String login(JSONObject messageWrapper) {
         Object content = messageWrapper.opt("content");
 
         if (!(content instanceof LoginContent loginContent)) {
-            return false;
+            return null;
         }
 
         PlayerModel player = PlayerRepository.getPlayerWithName(loginContent.name());
 
         if (player == null) {
-            return false;
+            return null;
         }
 
-        return player.password().equals(loginContent.passwordHash());
+        if (player.password().equals(loginContent.passwordHash())) {
+            return player.name();
+        }
+
+        return null;
     }
 
-    public static boolean register(JSONObject messageWrapper) {
+    public static String register(JSONObject messageWrapper) {
         Object content = messageWrapper.opt("content");
 
         if (!(content instanceof LoginContent loginContent) || PlayerRepository.doesPlayerExist(loginContent.name())) {
-            return false;
+            return null;
         }
 
         PlayerRepository.addPlayer(loginContent.name(), loginContent.passwordHash());
-        return true;
+        return loginContent.name();
     }
 
     public static boolean deleteAccount(JSONObject messageWrapper) {

@@ -22,7 +22,7 @@ public class ClientThreadHandlerTest {
 
         contentWrapper.put("content", new LoginContent("test_account", "1234"));
 
-        assertThat(ClientThreadHandler.login(contentWrapper)).isFalse();
+        assertThat(ClientThreadHandler.login(contentWrapper)).isNull();
         assertThat(table).isEmpty();
     }
 
@@ -44,27 +44,32 @@ public class ClientThreadHandlerTest {
     public void test_Create_AddPlayer_True() {
         Table table = new Table(new Source("jdbc:derby:db", "", ""), "Player");
         JSONObject contentWrapper = new JSONObject();
+        String name = "test_account";
+        String password = "1234";
 
-        contentWrapper.put("content", new LoginContent("test_account", "1234"));
+        contentWrapper.put("content", new LoginContent(name, password));
 
-        assertThat(ClientThreadHandler.register(contentWrapper)).isTrue();
+        assertThat(ClientThreadHandler.register(contentWrapper)).isEqualTo(name);
         assertThat(table)
-                .column("user_name").value().isEqualTo("test_account")
-                .column("user_pwd").value().isEqualTo("1234");
+                .column("user_name").value().isEqualTo(name)
+                .column("user_pwd").value().isEqualTo(password);
     }
 
     @Test
     @Order(4)
-    public void test_Create_AddPlayerAgain_True() {
+    public void test_Create_AddPlayerAgain_False() {
         Table table = new Table(new Source("jdbc:derby:db", "", ""), "Player");
         JSONObject contentWrapper = new JSONObject();
+        String name = "test_account";
+        String password = "1234";
+        String wrongPassword = "12345";
 
-        contentWrapper.put("content", new LoginContent("test_account", "12345"));
+        contentWrapper.put("content", new LoginContent(name, wrongPassword));
 
-        assertThat(ClientThreadHandler.register(contentWrapper)).isFalse();
+        assertThat(ClientThreadHandler.register(contentWrapper)).isNull();
         assertThat(table)
-                .column("user_name").value().isEqualTo("test_account")
-                .column("user_pwd").value().isEqualTo("1234");
+                .column("user_name").value().isEqualTo(name)
+                .column("user_pwd").value().isEqualTo(password);
     }
 
     @Test
@@ -72,12 +77,14 @@ public class ClientThreadHandlerTest {
     public void test_Login_LoginPlayerThatExists_True() {
         Table table = new Table(new Source("jdbc:derby:db", "", ""), "Player");
         JSONObject contentWrapper = new JSONObject();
+        String name = "test_account";
+        String password = "1234";
 
-        contentWrapper.put("content", new LoginContent("test_account", "1234"));
+        contentWrapper.put("content", new LoginContent(name, password));
 
-        assertThat(ClientThreadHandler.login(contentWrapper)).isTrue();
+        assertThat(ClientThreadHandler.login(contentWrapper)).isEqualTo(name);
         assertThat(table)
-                .column("user_name").value().isEqualTo("test_account");
+                .column("user_name").value().isEqualTo(name);
     }
 
     @Test

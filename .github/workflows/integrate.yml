@@ -1,4 +1,4 @@
-name: Test Project
+name: Test Project Server
 
 on:
   pull_request:
@@ -22,4 +22,4 @@ jobs:
         run: mvn --batch-mode -f server/pom.xml -DskipTests package
 
       - name: Test
-        run: mvn --batch-mode test
+        run: mvn --batch-mode -f server/pom.xml test

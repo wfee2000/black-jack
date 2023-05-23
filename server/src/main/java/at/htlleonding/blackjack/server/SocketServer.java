@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 public class SocketServer {
-    public void entryPoint() {
+    public static void entryPoint() {
         final int port = 5000;
 
         try (ServerSocket server = new ServerSocket(port)) {

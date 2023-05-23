@@ -19,4 +19,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build
-        run: mvn --batch-mode --update-snapshots -f server/pom.xml package
+        run: mvn --batch-mode -DskipTests -f server/pom.xml package
+
+      - name: Test
+        run: mvn --batch-mode test

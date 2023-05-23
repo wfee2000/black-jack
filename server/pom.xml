@@ -46,5 +46,10 @@
             <version>20230227</version>
         </dependency>
     </dependencies>
+    <build>
+        <testSourceDirectory>
+            src/test/java
+        </testSourceDirectory>
+    </build>
 
 </project>

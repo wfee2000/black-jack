@@ -22,43 +22,53 @@ public class ClientThreadHandler extends Thread {
     public void run() {
         try (BufferedReader clientMessagesIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
              PrintWriter clientMessagesOut = new PrintWriter(new OutputStreamWriter(client.getOutputStream()))) {
-            while (true) {
-                final JSONObject clientMessageWrapper = new JSONObject(clientMessagesIn.readLine());
-                final String command = (String) clientMessageWrapper.get("command");
 
-                if (!isLoggedIn) {
-                    switch (command) {
-                        case "login" -> {
-                            name = login(clientMessageWrapper);
-                            if (name != null) {
-                                isLoggedIn = true;
-                            } else {
-                                client.close();
-                                return;
-                            }
-                        }
-                        case "register" -> {
-                            name = register(clientMessageWrapper);
-                            if (name != null) {
-                                isLoggedIn = true;
-                            } else {
-                                client.close();
-                                return;
-                            }
-                        }
-                    }
-                } else {
-                    switch (command) {
-                        case "quit" -> {
-                            client.close();
-                            return;
-                        }
-                    }
+            while (true) {
+                if (!processClientInteraction(new JSONObject(clientMessagesIn.readLine()), clientMessagesOut)) {
+                    client.close();
+                    break;
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean processClientInteraction(JSONObject clientMessageWrapper, PrintWriter clientMessagesOut) {
+        final String command = (String) clientMessageWrapper.get("command");
+
+        if (!isLoggedIn) {
+            switch (command) {
+                case "login" -> {
+                    name = login(clientMessageWrapper);
+                    if (name != null) {
+                        isLoggedIn = true;
+                        return true;
+                    }
+
+                    return false;
+                }
+                case "register" -> {
+                    name = register(clientMessageWrapper);
+                    if (name != null) {
+                        isLoggedIn = true;
+                        return true;
+                    }
+
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+        switch (command) {
+            case "quit" -> {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     public static String login(JSONObject messageWrapper) {

@@ -1,8 +1,8 @@
 package at.htlleonding.blackjack.server;
 
 import at.htlleonding.blackjack.server.contents.LoginContent;
-import at.htlleonding.blackjack.server.models.PlayerModel;
-import at.htlleonding.blackjack.server.repositories.PlayerRepository;
+import at.htlleonding.blackjack.server.database.models.PlayerModel;
+import at.htlleonding.blackjack.server.database.repositories.PlayerRepository;
 import org.json.JSONObject;
 
 import java.io.*;

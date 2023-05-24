@@ -1,19 +1,23 @@
 package at.htlleonding.blackjack.server;
 
 import at.htlleonding.blackjack.server.contents.LoginContent;
+import at.htlleonding.blackjack.server.database.Database;
 import org.assertj.db.type.Source;
 import org.assertj.db.type.Table;
 import org.json.JSONObject;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.db.api.Assertions.assertThat;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ClientThreadHandlerTest {
+    static Database db;
+    @BeforeAll
+    public static void ensureDBCreated() {
+        db = new Database();
+        db.createDB();
+    }
     @Test
     @Order(1)
     public void test_Login_LoginPlayerThatDoesntExists_False() {
@@ -97,5 +101,10 @@ public class ClientThreadHandlerTest {
 
         assertThat(ClientThreadHandler.deleteAccount(contentWrapper)).isTrue();
         assertThat(table).isEmpty();
+    }
+
+    @AfterAll
+    public static void dropDB() {
+        db.dropDB();
     }
 }

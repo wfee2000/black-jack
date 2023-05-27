@@ -10,7 +10,24 @@ public class Player {
 
     private int bet;
 
+    public boolean isOut() {
+        return isOut;
+    }
+
+    public void isOut(boolean isOut) {
+        this.isOut = isOut;
+    }
     private boolean isOut;
+
+    public boolean hasBlackJack() {
+        return hasBlackJack;
+    }
+
+    public void hasBlackJack(boolean hasBlackJack) {
+        this.hasBlackJack = hasBlackJack;
+    }
+    private boolean hasBlackJack;
+
 
     private final List<Card> cards;
 
@@ -22,35 +39,24 @@ public class Player {
         coins = 100;
     }
 
-    public Card doubleDown(Card card) {
+    public boolean doubleDown(Card card) {
         if (coins < bet) {
-            return  null;
+            return false;
         }
 
         coins -= bet;
         bet *= 2;
-
-        return hit(card);
+        isOut = true;
+        return true;
     }
 
-    public Card hit(Card card) {
-        if (isOut) {
-            return null;
-        }
-
+    public void hit(Card card) {
         cards.add(card);
-        isOut = Card.getSum(cards) > 21;
-        triggerLoose();
-        return card;
     }
 
     public boolean distribute(List<Card> cards) {
         this.cards.addAll(cards);
-        if (Card.getSum(cards) == 21) {
-            return isOut = true;
-        }
-
-        return false;
+        return Card.getSum(cards) == 21;
     }
 
     public void stay() {
@@ -68,6 +74,11 @@ public class Player {
 
     public void triggerBlackjack() {
         coins += bet * 3 / 2;
+        bet = 0;
+    }
+
+    public void triggerDraw() {
+        coins += bet;
         bet = 0;
     }
 
@@ -89,5 +100,17 @@ public class Player {
 
     public ClientThreadHandler getClient() {
         return client;
+    }
+
+    public void surrender() {
+        coins += bet / 2;
+        bet = 0;
+    }
+
+    public void split() {
+    }
+
+    public List<Card> getCards() {
+        return cards;
     }
 }

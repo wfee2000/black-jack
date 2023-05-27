@@ -48,23 +48,77 @@ public class Dealer {
         hasStarted = true;
 
         for (int i = 0; i < rounds; i++) {
-            cards.add(cardStackTake.takeCard());
+            executeRound();
+        }
+    }
 
-            players.forEach(player -> {
-                if (player.distribute(new ArrayList<>(cardStackTake.takeCards(2)))) {
-                    cards.add(cardStackTake.takeCard());
+    private void executeRound() {
+        cards.add(cardStackTake.takeCard());
 
-                    if (Card.getSum(cards) != 21) {
-                        player.triggerBlackjack();
-                    }
+        players.forEach(player -> {
+            player.distribute(new ArrayList<>(cardStackTake.takeCards(2)));
+
+            if (Card.getSum(player.getCards()) > 20) {
+                player.isOut(true);
+                player.hasBlackJack(true);
+            }
+        });
+
+        while (!players.stream().allMatch(Player::isOut)) {
+            players.stream().filter(player -> !player.isOut()).forEach(player -> {
+                switch (player.getClient().requireCall()) {
+                    case Hit -> player.hit(cardStackTake.takeCard());
+                    case Stay -> player.stay();
+                    case DoubleDown -> player.doubleDown(cardStackTake.takeCard());
+                    case Split -> player.split();
+                    case Surrender -> player.surrender();
+                }
+
+                if (!player.isOut()) {
+                    player.isOut(Card.getSum(player.getCards()) > 21);
                 }
             });
-
-            // end of round
-            players.forEach(player -> cardStackPlace.putCardsBack(player.takeCardsAway()));
-
-            cardStackPlace.putCardsBack(cards);
-            cards.clear();
         }
+
+        cards.add(cardStackTake.takeCard());
+
+        if (Card.getSum(cards) == 21) {
+            players.forEach(player -> {
+                if (!player.hasBlackJack()) {
+                    player.triggerLoose();
+                } else {
+                    player.triggerDraw();
+                }
+            });
+        }
+
+        // players finished playing
+        while (Card.getSum(cards) < 17) {
+            cards.add(cardStackTake.takeCard());
+        }
+
+        players.forEach(player -> {
+            if (player.hasBlackJack()) {
+                player.triggerBlackjack();
+                return;
+            }
+
+            int playerSum = Card.getSum(player.getCards());
+            int sum = Card.getSum(cards);
+
+            if (sum < playerSum) {
+                player.triggerWin();
+            } else if (sum == playerSum) {
+                player.triggerDraw();
+            } else {
+                player.triggerLoose();
+            }
+        });
+
+        // end of round
+        players.forEach(player -> cardStackPlace.putCardsBack(player.takeCardsAway()));
+
+        cardStackPlace.putCardsBack(cards);
+        cards.clear();
     }
 }

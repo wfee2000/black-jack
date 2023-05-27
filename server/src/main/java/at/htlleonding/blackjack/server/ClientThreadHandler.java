@@ -3,6 +3,7 @@ package at.htlleonding.blackjack.server;
 import at.htlleonding.blackjack.server.contents.LoginContent;
 import at.htlleonding.blackjack.server.database.models.PlayerModel;
 import at.htlleonding.blackjack.server.database.repositories.PlayerRepository;
+import at.htlleonding.blackjack.server.game.Call;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -11,6 +12,9 @@ import java.net.Socket;
 public class ClientThreadHandler extends Thread {
     private final Socket client;
     private boolean isLoggedIn;
+
+    private PrintWriter clientOut;
+    private Call call;
     private String name;
 
     public ClientThreadHandler(Socket client) {
@@ -22,7 +26,7 @@ public class ClientThreadHandler extends Thread {
     public void run() {
         try (BufferedReader clientMessagesIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
              PrintWriter clientMessagesOut = new PrintWriter(new OutputStreamWriter(client.getOutputStream()))) {
-
+            clientOut = clientMessagesOut;
             while (true) {
                 if (!processClientInteraction(new JSONObject(clientMessagesIn.readLine()), clientMessagesOut)) {
                     client.close();
@@ -38,7 +42,7 @@ public class ClientThreadHandler extends Thread {
         final String command = (String) clientMessageWrapper.get("command");
 
         if (!isLoggedIn) {
-            switch (command) {
+            switch (command.toLowerCase()) {
                 case "login" -> {
                     name = login(clientMessageWrapper);
                     if (name != null) {
@@ -62,7 +66,7 @@ public class ClientThreadHandler extends Thread {
             return false;
         }
 
-        switch (command) {
+        switch (command.toLowerCase()) {
             case "quit" -> {
                 return false;
             }
@@ -117,5 +121,19 @@ public class ClientThreadHandler extends Thread {
 
         PlayerRepository.deletePlayer(loginContent.name());
         return true;
+    }
+
+    public Call requireCall() {
+        try {
+            JSONObject request = new JSONObject();
+            request.put("method", "get");
+            request.put("value", "call");
+
+            clientOut.println(request);
+            wait();
+            return call;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

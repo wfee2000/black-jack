@@ -1,6 +1,6 @@
-package at.htlleonding.blackjack.server.repositories;
+package at.htlleonding.blackjack.server.database.repositories;
 
-import at.htlleonding.blackjack.server.models.PlayerModel;
+import at.htlleonding.blackjack.server.database.models.PlayerModel;
 
 import java.sql.*;
 

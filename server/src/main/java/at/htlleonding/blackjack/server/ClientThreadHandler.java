@@ -8,10 +8,13 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class ClientThreadHandler extends Thread {
     private final Socket client;
     private boolean isLoggedIn;
+
+    private boolean isInGame;
 
     private PrintWriter clientOut;
     private Call call;
@@ -39,7 +42,7 @@ public class ClientThreadHandler extends Thread {
     }
 
     public boolean processClientInteraction(JSONObject clientMessageWrapper, PrintWriter clientMessagesOut) {
-        final String command = (String) clientMessageWrapper.get("command");
+        final String command = (String) clientMessageWrapper.get("method");
 
         if (!isLoggedIn) {
             switch (command.toLowerCase()) {
@@ -64,6 +67,11 @@ public class ClientThreadHandler extends Thread {
             }
 
             return false;
+        }
+
+        if (isInGame && Arrays.stream(Call.values()).anyMatch(call -> call.toString().equalsIgnoreCase(command))) {
+            call = Call.valueOf(command);
+            notify();
         }
 
         switch (command.toLowerCase()) {
@@ -126,8 +134,7 @@ public class ClientThreadHandler extends Thread {
     public Call requireCall() {
         try {
             JSONObject request = new JSONObject();
-            request.put("method", "get");
-            request.put("value", "call");
+            request.put("method", "call");
 
             clientOut.println(request);
             wait();

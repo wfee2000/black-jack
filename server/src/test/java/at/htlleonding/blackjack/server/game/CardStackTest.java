@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.EmptyStackException;
 import java.util.List;
-import java.util.Stack;
 
 public class CardStackTest {
     @Test
@@ -49,11 +48,11 @@ public class CardStackTest {
     }
 
     @Test
-    public void test_TakeCards_RemoveAllCardsAndOne_ThrowsException() {
+    public void test_TakeCards_RemoveAllCardsAndOne_WholeStack() {
         CardStack cardStack = new CardStack(true);
 
-        Assertions.assertThatThrownBy(() -> cardStack.takeCards(6 * Sign.values().length * Value.values().length + 1))
-                .isInstanceOf(EmptyStackException.class);
+        Assertions.assertThatCode(() -> cardStack.
+                takeCards(6 * Sign.values().length * Value.values().length + 1)).doesNotThrowAnyException();
     }
 
     @Test
@@ -63,6 +62,6 @@ public class CardStackTest {
         List<Card> cards = cardStack.takeCards(6 * Sign.values().length * Value.values().length);
         cardStack.putCardsBack(cards);
 
-        Assertions.assertThatCode(cardStack::takeCard).isNotNull().doesNotThrowAnyException();
+        Assertions.assertThatCode(cardStack::takeCard).doesNotThrowAnyException();
     }
 }

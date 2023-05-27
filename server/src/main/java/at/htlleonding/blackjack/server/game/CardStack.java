@@ -18,8 +18,10 @@ public class CardStack {
     private void initStack() {
         List<Card> cards = new ArrayList<>();
 
-        Arrays.stream(Sign.values()).forEach(
-                sign -> Arrays.stream(Value.values()).forEach(value -> cards.add(new Card(sign, value))));
+        for (int i = 0; i < 6; i++) {
+            Arrays.stream(Sign.values()).forEach(
+                    sign -> Arrays.stream(Value.values()).forEach(value -> cards.add(new Card(sign, value))));
+        }
 
         while (!cards.isEmpty()) {
             stack.push(cards.remove((int)(Math.random() * cards.size())));

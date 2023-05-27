@@ -33,7 +33,9 @@ public class CardStack {
     }
 
     public List<Card> takeCards(int amount) {
-        return stack.stream().limit(amount).toList();
+        List<Card> cards = stack.stream().limit(amount).toList();
+        stack.removeAll(cards);
+        return cards;
     }
 
     public void putCardsBack(List<Card> cards) {
@@ -43,6 +45,7 @@ public class CardStack {
 
     public void shuffle() {
         List<Card> cards = new ArrayList<>(stack.stream().toList());
+        stack.clear();
 
         while (!cards.isEmpty()) {
             stack.push(cards.remove((int)(Math.random() * cards.size())));

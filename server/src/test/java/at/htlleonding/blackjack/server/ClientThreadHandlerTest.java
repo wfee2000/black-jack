@@ -1,10 +1,13 @@
 package at.htlleonding.blackjack.server;
 
 import at.htlleonding.blackjack.server.contents.LoginContent;
+import at.htlleonding.blackjack.server.contents.MessageContent;
 import at.htlleonding.blackjack.server.database.Database;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assertj.db.output.Outputs;
 import org.assertj.db.type.Source;
 import org.assertj.db.type.Table;
-import org.json.JSONObject;
 import org.junit.jupiter.api.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +16,8 @@ import static org.assertj.db.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ClientThreadHandlerTest {
     static Database db;
+    static ObjectMapper mapper = new ObjectMapper();
+    static Source source = new Source("jdbc:derby:db", "", "");
     @BeforeAll
     public static void ensureDBCreated() {
         db = new Database();
@@ -21,56 +26,68 @@ public class ClientThreadHandlerTest {
     @Test
     @Order(1)
     public void test_Login_LoginPlayerThatDoesntExists_False() {
-        Table table = new Table(new Source("jdbc:derby:db", "", ""), "Player");
-        JSONObject contentWrapper = new JSONObject();
+        Table table = new Table(source, "Player");
 
-        contentWrapper.put("content", new LoginContent("test_account", "1234"));
-
-        assertThat(ClientThreadHandler.login(contentWrapper)).isNull();
+        try {
+            assertThat(ClientThreadHandler.login(new MessageContent("", mapper.writeValueAsString(
+                    new LoginContent("test_account", "1234"))))).isNull();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         assertThat(table).isEmpty();
     }
 
     @Test
     @Order(2)
     public void test_Delete_DeleteNonExistentPlayer_False() {
-        Table table = new Table(new Source("jdbc:derby:db", "", ""), "Player");
-        JSONObject contentWrapper = new JSONObject();
-
-        contentWrapper.put("content", new LoginContent("test_account", "1234"));
+        Table table = new Table(source, "Player");
 
         assertThat(table).isEmpty();
-        assertThat(ClientThreadHandler.deleteAccount(contentWrapper)).isFalse();
+        try {
+            assertThat(ClientThreadHandler.deleteAccount(new MessageContent("", mapper.writeValueAsString(
+                    new LoginContent("test_account", "1234"))))).isFalse();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         assertThat(table).isEmpty();
     }
 
     @Test
     @Order(3)
     public void test_Create_AddPlayer_True() {
-        Table table = new Table(new Source("jdbc:derby:db", "", ""), "Player");
-        JSONObject contentWrapper = new JSONObject();
+        Table table = new Table(source, "Player");
         String name = "test_account";
         String password = "1234";
 
-        contentWrapper.put("content", new LoginContent(name, password));
+        try {
+            assertThat(ClientThreadHandler.register(new MessageContent("", mapper.writeValueAsString(
+                    new LoginContent(name, password))))).isEqualTo(name);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        Outputs.output(table).toConsole();
 
-        assertThat(ClientThreadHandler.register(contentWrapper)).isEqualTo(name);
         assertThat(table)
                 .column("user_name").value().isEqualTo(name)
                 .column("user_pwd").value().isEqualTo(password);
+        Outputs.output(table).toConsole();
     }
 
     @Test
     @Order(4)
     public void test_Create_AddPlayerAgain_False() {
-        Table table = new Table(new Source("jdbc:derby:db", "", ""), "Player");
-        JSONObject contentWrapper = new JSONObject();
+        Table table = new Table(source, "Player");
+        Outputs.output(table).toConsole();
         String name = "test_account";
         String password = "1234";
         String wrongPassword = "12345";
 
-        contentWrapper.put("content", new LoginContent(name, wrongPassword));
-
-        assertThat(ClientThreadHandler.register(contentWrapper)).isNull();
+        try {
+            assertThat(ClientThreadHandler.register(new MessageContent("", mapper.writeValueAsString(
+                    new LoginContent(name, wrongPassword))))).isNull();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         assertThat(table)
                 .column("user_name").value().isEqualTo(name)
                 .column("user_pwd").value().isEqualTo(password);
@@ -79,14 +96,16 @@ public class ClientThreadHandlerTest {
     @Test
     @Order(5)
     public void test_Login_LoginPlayerThatExists_True() {
-        Table table = new Table(new Source("jdbc:derby:db", "", ""), "Player");
-        JSONObject contentWrapper = new JSONObject();
+        Table table = new Table(source, "Player");
         String name = "test_account";
         String password = "1234";
 
-        contentWrapper.put("content", new LoginContent(name, password));
-
-        assertThat(ClientThreadHandler.login(contentWrapper)).isEqualTo(name);
+        try {
+            assertThat(ClientThreadHandler.login(new MessageContent("", mapper.writeValueAsString(
+                    new LoginContent(name, password))))).isEqualTo(name);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         assertThat(table)
                 .column("user_name").value().isEqualTo(name);
     }
@@ -94,12 +113,15 @@ public class ClientThreadHandlerTest {
     @Test
     @Order(6)
     public void test_Delete_DeleteExistingPlayer_True() {
-        Table table = new Table(new Source("jdbc:derby:db", "", ""), "Player");
-        JSONObject contentWrapper = new JSONObject();
+        Table table = new Table(source, "Player");
 
-        contentWrapper.put("content", new LoginContent("test_account", "1234"));
-
-        assertThat(ClientThreadHandler.deleteAccount(contentWrapper)).isTrue();
+        try {
+            assertThat(ClientThreadHandler.deleteAccount(
+                    new MessageContent("", mapper.writeValueAsString(
+                            new LoginContent("test_account", "1234"))))).isTrue();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         assertThat(table).isEmpty();
     }
 

@@ -107,9 +107,6 @@ public class Player {
         bet = 0;
     }
 
-    public void split() {
-    }
-
     public List<Card> getCards() {
         return cards;
     }

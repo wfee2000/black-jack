@@ -15,8 +15,7 @@ public class ClientThreadHandler extends Thread {
     private final Socket client;
     private boolean isLoggedIn;
 
-    private final ObjectMapper mapper;
-
+    private static final ObjectMapper mapper = new ObjectMapper();
     private PrintWriter clientOut;
     private Call call;
     private String name;
@@ -24,7 +23,6 @@ public class ClientThreadHandler extends Thread {
     public ClientThreadHandler(Socket client) {
         this.client = client;
         this.isLoggedIn = false;
-        this.mapper = new ObjectMapper();
     }
 
     @Override
@@ -32,7 +30,6 @@ public class ClientThreadHandler extends Thread {
         try (BufferedReader clientMessagesIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
              PrintWriter clientMessagesOut = new PrintWriter(client.getOutputStream(), true)) {
             clientOut = clientMessagesOut;
-
             while (true) {
                 if (!processClientInteraction(mapper.readValue(clientMessagesIn.readLine(), MessageContent.class), clientMessagesOut)) {
                     client.close();
@@ -44,29 +41,31 @@ public class ClientThreadHandler extends Thread {
         }
     }
 
-    public boolean processClientInteraction(MessageContent clientMessage, PrintWriter clientMessagesOut) {
-        final String command = clientMessage.method();
+    public boolean processClientInteraction(MessageContent clientMessageWrapper, PrintWriter clientMessagesOut) {
+        final String command = clientMessageWrapper.method();
 
         if (!isLoggedIn) {
             switch (command.toLowerCase()) {
                 case "login" -> {
-                    name = login(clientMessage);
+                    name = login(clientMessageWrapper);
                     if (name != null) {
                         isLoggedIn = true;
+                        clientMessagesOut.println("Connected");
                         return true;
                     }
 
-                    clientMessagesOut.println("Login failed");
-
+                    clientMessagesOut.println("Failure");
                     return false;
                 }
                 case "register" -> {
-                    name = register(clientMessage);
+                    name = register(clientMessageWrapper);
                     if (name != null) {
                         isLoggedIn = true;
+                        clientMessagesOut.println("Connected");
                         return true;
                     }
 
+                    clientMessagesOut.println("Failure");
                     return false;
                 }
             }
@@ -83,64 +82,70 @@ public class ClientThreadHandler extends Thread {
         return false;
     }
 
-    public String login(MessageContent message) {
-        LoginContent content;
+    public static String login(MessageContent messageWrapper) {
+        String content = messageWrapper.content();
+        LoginContent loginContent;
 
         try {
-            content = mapper.readValue(message.content(), LoginContent.class);
+            loginContent = mapper.readValue(content, LoginContent.class);
         } catch (JsonProcessingException e) {
-            return null;
+            throw new RuntimeException(e);
         }
 
-        PlayerModel player = PlayerRepository.getPlayerWithName(content.name());
+        PlayerModel player = PlayerRepository.getPlayerWithName(loginContent.name());
 
         if (player == null) {
             return null;
         }
 
-        if (player.password().equals(content.passwordHash())) {
+        if (player.password().equals(loginContent.passwordHash())) {
             return player.name();
         }
 
         return null;
     }
 
-    public String register(MessageContent message) {
-        LoginContent content;
+    public static String register(MessageContent messageWrapper) {
+        String content = messageWrapper.content();
+        LoginContent loginContent;
 
         try {
-            content = mapper.readValue(message.content(), LoginContent.class);
+            loginContent = mapper.readValue(content, LoginContent.class);
         } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (PlayerRepository.doesPlayerExist(loginContent.name())) {
             return null;
         }
 
-        PlayerRepository.addPlayer(content.name(), content.passwordHash());
-        return content.name();
+        PlayerRepository.addPlayer(loginContent.name(), loginContent.passwordHash());
+        return loginContent.name();
     }
 
-    public boolean deleteAccount(MessageContent message) {
-        LoginContent content;
+    public static boolean deleteAccount(MessageContent messageWrapper) {
+        String content = messageWrapper.content();
+        LoginContent loginContent;
 
         try {
-            content = mapper.readValue(message.content(), LoginContent.class);
+            loginContent = mapper.readValue(content, LoginContent.class);
         } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        PlayerModel player = PlayerRepository.getPlayerWithName(loginContent.name());
+
+        if (player == null || !loginContent.passwordHash().equals(player.password())) {
             return false;
         }
 
-        PlayerModel player = PlayerRepository.getPlayerWithName(content.name());
-
-        if (player == null || !content.passwordHash().equals(player.password())) {
-            return false;
-        }
-
-        PlayerRepository.deletePlayer(content.name());
+        PlayerRepository.deletePlayer(loginContent.name());
         return true;
     }
 
     public Call requireCall() {
         try {
             String request = mapper.writeValueAsString(new MessageContent("call", null));
-
             clientOut.println(request);
             wait();
             return call;

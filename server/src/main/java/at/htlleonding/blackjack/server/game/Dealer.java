@@ -70,7 +70,6 @@ public class Dealer {
                     case Hit -> player.hit(cardStackTake.takeCard());
                     case Stay -> player.stay();
                     case DoubleDown -> player.doubleDown(cardStackTake.takeCard());
-                    case Split -> player.split();
                     case Surrender -> player.surrender();
                 }
 

@@ -1,4 +1,4 @@
-package htlleonding.frontend.Controller;
+package at.htlleonding.frontend.Controller;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

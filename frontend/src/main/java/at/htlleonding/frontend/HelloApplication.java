@@ -1,4 +1,4 @@
-package htlleonding.frontend;
+package at.htlleonding.frontend;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

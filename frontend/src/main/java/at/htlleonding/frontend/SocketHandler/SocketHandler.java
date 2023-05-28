@@ -1,4 +1,4 @@
-package htlleonding.frontend.SocketHandler;
+package at.htlleonding.frontend.SocketHandler;
 
 import java.io.IOException;
 import java.net.Socket;

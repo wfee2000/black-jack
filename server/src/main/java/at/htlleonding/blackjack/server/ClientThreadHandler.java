@@ -10,10 +10,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class ClientThreadHandler extends Thread {
     private final Socket client;
     private boolean isLoggedIn;
+
+    private boolean isInGame;
 
     private static final ObjectMapper mapper = new ObjectMapper();
     private PrintWriter clientOut;
@@ -31,7 +34,8 @@ public class ClientThreadHandler extends Thread {
              PrintWriter clientMessagesOut = new PrintWriter(client.getOutputStream(), true)) {
             clientOut = clientMessagesOut;
             while (true) {
-                if (!processClientInteraction(mapper.readValue(clientMessagesIn.readLine(), MessageContent.class), clientMessagesOut)) {
+                if (!processClientInteraction(mapper.readValue(clientMessagesIn.readLine(), MessageContent.class),
+                        clientMessagesOut)) {
                     client.close();
                     break;
                 }
@@ -41,13 +45,13 @@ public class ClientThreadHandler extends Thread {
         }
     }
 
-    public boolean processClientInteraction(MessageContent clientMessageWrapper, PrintWriter clientMessagesOut) {
-        final String command = clientMessageWrapper.method();
+    public boolean processClientInteraction(MessageContent clientMessage, PrintWriter clientMessagesOut) {
+        final String command = clientMessage.method();
 
         if (!isLoggedIn) {
             switch (command.toLowerCase()) {
                 case "login" -> {
-                    name = login(clientMessageWrapper);
+                    name = login(clientMessage);
                     if (name != null) {
                         isLoggedIn = true;
                         clientMessagesOut.println("Connected");
@@ -58,7 +62,7 @@ public class ClientThreadHandler extends Thread {
                     return false;
                 }
                 case "register" -> {
-                    name = register(clientMessageWrapper);
+                    name = register(clientMessage);
                     if (name != null) {
                         isLoggedIn = true;
                         clientMessagesOut.println("Connected");
@@ -71,6 +75,11 @@ public class ClientThreadHandler extends Thread {
             }
 
             return false;
+        }
+
+        if (isInGame && Arrays.stream(Call.values()).anyMatch(call -> call.toString().equalsIgnoreCase(command))) {
+            call = Call.valueOf(command);
+            notify();
         }
 
         switch (command.toLowerCase()) {

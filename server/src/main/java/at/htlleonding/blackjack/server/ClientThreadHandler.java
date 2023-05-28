@@ -39,7 +39,7 @@ public class ClientThreadHandler extends Thread {
     }
 
     public boolean processClientInteraction(JSONObject clientMessageWrapper, PrintWriter clientMessagesOut) {
-        final String command = (String) clientMessageWrapper.get("command");
+        final String command = (String) clientMessageWrapper.get("method");
 
         if (!isLoggedIn) {
             switch (command.toLowerCase()) {
@@ -49,6 +49,8 @@ public class ClientThreadHandler extends Thread {
                         isLoggedIn = true;
                         return true;
                     }
+
+                    clientMessagesOut.println("Login failed");
 
                     return false;
                 }

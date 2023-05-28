@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane fx:id="content" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="540.0" minWidth="960.0" prefHeight="540.0" prefWidth="960.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="htlleonding.frontend.Controller.RegisterController">
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints maxHeight="147.0" minHeight="10.0" prefHeight="49.0" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="254.0" minHeight="10.0" prefHeight="32.0" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="284.0" minHeight="10.0" prefHeight="46.0" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="269.0" minHeight="10.0" prefHeight="48.0" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="269.0" minHeight="10.0" prefHeight="41.0" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="303.0" minHeight="10.0" prefHeight="55.0" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="303.0" minHeight="10.0" prefHeight="162.0" vgrow="SOMETIMES" />
+    </rowConstraints>
+    <children>
+        <Label alignment="CENTER" contentDisplay="CENTER" graphicTextGap="10.0" prefHeight="65.0" prefWidth="320.0" text="Register" GridPane.columnIndex="1" />
+        <Button fx:id="registerButton" mnemonicParsing="false" onAction="#registerUser" text="register" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+        <TextField fx:id="nameField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+        <TextField fx:id="pwdField" layoutX="210.0" layoutY="190.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+        <Label alignment="BOTTOM_LEFT" contentDisplay="CENTER" graphicTextGap="10.0" layoutX="210.0" layoutY="10.0" prefHeight="66.0" prefWidth="200.0" text="Name:" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        <Label alignment="BOTTOM_LEFT" contentDisplay="CENTER" graphicTextGap="10.0" layoutX="210.0" layoutY="10.0" prefHeight="66.0" prefWidth="200.0" text="Passwort:" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+    </children>
+</GridPane>

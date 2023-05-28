@@ -1,18 +1,24 @@
 package at.htlleonding.blackjack.server;
 
 import at.htlleonding.blackjack.server.contents.LoginContent;
+import at.htlleonding.blackjack.server.contents.MessageContent;
 import at.htlleonding.blackjack.server.database.models.PlayerModel;
 import at.htlleonding.blackjack.server.database.repositories.PlayerRepository;
 import at.htlleonding.blackjack.server.game.Call;
-import org.json.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class ClientThreadHandler extends Thread {
     private final Socket client;
     private boolean isLoggedIn;
 
+    private boolean isInGame;
+
+    private static final ObjectMapper mapper = new ObjectMapper();
     private PrintWriter clientOut;
     private Call call;
     private String name;
@@ -25,10 +31,11 @@ public class ClientThreadHandler extends Thread {
     @Override
     public void run() {
         try (BufferedReader clientMessagesIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
-             PrintWriter clientMessagesOut = new PrintWriter(new OutputStreamWriter(client.getOutputStream()))) {
+             PrintWriter clientMessagesOut = new PrintWriter(client.getOutputStream(), true)) {
             clientOut = clientMessagesOut;
             while (true) {
-                if (!processClientInteraction(new JSONObject(clientMessagesIn.readLine()), clientMessagesOut)) {
+                if (!processClientInteraction(mapper.readValue(clientMessagesIn.readLine(), MessageContent.class),
+                        clientMessagesOut)) {
                     client.close();
                     break;
                 }
@@ -38,32 +45,41 @@ public class ClientThreadHandler extends Thread {
         }
     }
 
-    public boolean processClientInteraction(JSONObject clientMessageWrapper, PrintWriter clientMessagesOut) {
-        final String command = (String) clientMessageWrapper.get("command");
+    public boolean processClientInteraction(MessageContent clientMessage, PrintWriter clientMessagesOut) {
+        final String command = clientMessage.method();
 
         if (!isLoggedIn) {
             switch (command.toLowerCase()) {
                 case "login" -> {
-                    name = login(clientMessageWrapper);
+                    name = login(clientMessage);
                     if (name != null) {
                         isLoggedIn = true;
+                        clientMessagesOut.println("Connected");
                         return true;
                     }
 
+                    clientMessagesOut.println("Failure");
                     return false;
                 }
                 case "register" -> {
-                    name = register(clientMessageWrapper);
+                    name = register(clientMessage);
                     if (name != null) {
                         isLoggedIn = true;
+                        clientMessagesOut.println("Connected");
                         return true;
                     }
 
+                    clientMessagesOut.println("Failure");
                     return false;
                 }
             }
 
             return false;
+        }
+
+        if (isInGame && Arrays.stream(Call.values()).anyMatch(call -> call.toString().equalsIgnoreCase(command))) {
+            call = Call.valueOf(command);
+            notify();
         }
 
         switch (command.toLowerCase()) {
@@ -75,11 +91,14 @@ public class ClientThreadHandler extends Thread {
         return false;
     }
 
-    public static String login(JSONObject messageWrapper) {
-        Object content = messageWrapper.opt("content");
+    public static String login(MessageContent messageWrapper) {
+        String content = messageWrapper.content();
+        LoginContent loginContent;
 
-        if (!(content instanceof LoginContent loginContent)) {
-            return null;
+        try {
+            loginContent = mapper.readValue(content, LoginContent.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
 
         PlayerModel player = PlayerRepository.getPlayerWithName(loginContent.name());
@@ -95,10 +114,17 @@ public class ClientThreadHandler extends Thread {
         return null;
     }
 
-    public static String register(JSONObject messageWrapper) {
-        Object content = messageWrapper.opt("content");
+    public static String register(MessageContent messageWrapper) {
+        String content = messageWrapper.content();
+        LoginContent loginContent;
 
-        if (!(content instanceof LoginContent loginContent) || PlayerRepository.doesPlayerExist(loginContent.name())) {
+        try {
+            loginContent = mapper.readValue(content, LoginContent.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (PlayerRepository.doesPlayerExist(loginContent.name())) {
             return null;
         }
 
@@ -106,11 +132,14 @@ public class ClientThreadHandler extends Thread {
         return loginContent.name();
     }
 
-    public static boolean deleteAccount(JSONObject messageWrapper) {
-        Object content = messageWrapper.opt("content");
+    public static boolean deleteAccount(MessageContent messageWrapper) {
+        String content = messageWrapper.content();
+        LoginContent loginContent;
 
-        if (!(content instanceof LoginContent loginContent)) {
-            return false;
+        try {
+            loginContent = mapper.readValue(content, LoginContent.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
 
         PlayerModel player = PlayerRepository.getPlayerWithName(loginContent.name());
@@ -125,14 +154,11 @@ public class ClientThreadHandler extends Thread {
 
     public Call requireCall() {
         try {
-            JSONObject request = new JSONObject();
-            request.put("method", "get");
-            request.put("value", "call");
-
+            String request = mapper.writeValueAsString(new MessageContent("call", null));
             clientOut.println(request);
             wait();
             return call;
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }

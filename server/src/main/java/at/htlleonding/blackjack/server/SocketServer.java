@@ -12,7 +12,8 @@ public class SocketServer {
 
             //noinspection InfiniteLoopStatement
             while (true) {
-                new ClientThreadHandler(server.accept());
+                new ClientThreadHandler(server.accept()).start();
+                System.out.println("Client connected");
             }
         } catch (IOException e) {
             System.out.printf("Port %d is currently occupied%n", port);

@@ -1,5 +1,4 @@
-package at.htlleonding.blackjack.server.contents;
+package at.htlleonding.frontend.model;
 
 public record LoginContent(String name, String passwordHash) {
-
 }

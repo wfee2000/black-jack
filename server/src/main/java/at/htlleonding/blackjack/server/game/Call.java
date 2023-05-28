@@ -4,6 +4,5 @@ public enum Call {
     Hit,
     Stay,
     DoubleDown,
-    Split,
     Surrender
 }

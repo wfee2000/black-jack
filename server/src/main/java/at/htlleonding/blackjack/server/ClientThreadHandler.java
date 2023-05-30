@@ -3,14 +3,19 @@ package at.htlleonding.blackjack.server;
 import at.htlleonding.blackjack.server.contents.LoginContent;
 import at.htlleonding.blackjack.server.contents.MessageContent;
 import at.htlleonding.blackjack.server.database.models.PlayerModel;
+import at.htlleonding.blackjack.server.database.repositories.GlobalLeaderboardRepository;
 import at.htlleonding.blackjack.server.database.repositories.PlayerRepository;
 import at.htlleonding.blackjack.server.game.Call;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.List;
 
 public class ClientThreadHandler extends Thread {
     private final Socket client;
@@ -36,8 +41,11 @@ public class ClientThreadHandler extends Thread {
             while (true) {
                 if (!processClientInteraction(mapper.readValue(clientMessagesIn.readLine(), MessageContent.class),
                         clientMessagesOut)) {
-                    client.close();
-                    break;
+
+                    if(isLoggedIn){
+                        client.close();
+                        break;
+                    }
                 }
             }
         } catch (IOException e) {
@@ -83,6 +91,14 @@ public class ClientThreadHandler extends Thread {
         }
 
         switch (command.toLowerCase()) {
+            case "globalleaderboard" -> {
+
+                String entries = getGlobalLeaderboard();
+
+                clientMessagesOut.println(entries);
+
+                return true;
+            }
             case "quit" -> {
                 return false;
             }
@@ -152,9 +168,29 @@ public class ClientThreadHandler extends Thread {
         return true;
     }
 
+    public static String getGlobalLeaderboard(){
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        List entries = GlobalLeaderboardRepository.getAllEntries();
+
+        String jsonString = "";
+
+        try {
+            jsonString = mapper.writeValueAsString(new MessageContent("getGlobalLeaderboard",
+                    mapper.writeValueAsString(
+                            entries
+                    )));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        return jsonString;
+    }
+
     public Call requireCall() {
         try {
-            String request = mapper.writeValueAsString(new MessageContent("call", null));
+            String request = mapper.writeValueAsString(new MessageContent("call", ""));
             clientOut.println(request);
             wait();
             return call;

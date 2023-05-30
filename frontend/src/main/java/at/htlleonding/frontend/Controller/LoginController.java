@@ -1,5 +1,6 @@
 package at.htlleonding.frontend.Controller;
 
+import at.htlleonding.frontend.HelloApplication;
 import at.htlleonding.frontend.SocketHandler.SocketHandler;
 import at.htlleonding.frontend.model.LoginContent;
 import at.htlleonding.frontend.model.MessageContent;
@@ -9,6 +10,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -42,11 +44,22 @@ public class LoginController {
     }
 
     public void loginUser(ActionEvent actionEvent) {
-        // Socket schicken
 
         String name = nameField.getText();
-        String password;
+        String password = pwdField.getText();
         Socket socket = SocketHandler.getInstance().getSocket();
+
+        if(name.isEmpty() || password.isEmpty() ||
+                name.chars().allMatch(c -> c == (int)' ') || password.chars().allMatch(c -> c == (int)' ')){
+
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+
+            alert.setContentText("Empty username or password!");
+
+            alert.showAndWait();
+
+            return;
+        }
 
         try {
             byte[] hashedPassword = MessageDigest.getInstance("SHA-256").digest(pwdField.getText()
@@ -58,6 +71,8 @@ public class LoginController {
             String jsonString = mapper.writeValueAsString(new MessageContent("login",
                     mapper.writeValueAsString(new LoginContent(name, password))));
 
+            System.out.println(jsonString);
+
             // prepare printStream
             PrintStream printStream = new PrintStream(socket.getOutputStream(), true);
             // send json
@@ -68,6 +83,16 @@ public class LoginController {
             String output = clientReader.readLine();
             // output returning message
             System.out.println(output);
+
+            if (output != null && output.equals("Connected")) {
+                HelloApplication.setStageTo("home.fxml");
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+
+                alert.setContentText("Wrong username or password!");
+
+                alert.showAndWait();
+            }
 
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -19,7 +19,6 @@
       <RowConstraints maxHeight="303.0" minHeight="10.0" prefHeight="162.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
-      <Label alignment="CENTER" contentDisplay="CENTER" graphicTextGap="10.0" prefHeight="65.0" prefWidth="322.0" text="Login" GridPane.columnIndex="1" />
       <Button fx:id="loginButton" mnemonicParsing="false" onAction="#loginUser" text="login" GridPane.columnIndex="1" GridPane.rowIndex="5" />
       <TextField fx:id="nameField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
       <TextField fx:id="pwdField" layoutX="210.0" layoutY="190.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
@@ -27,8 +26,13 @@
       <Label alignment="BOTTOM_LEFT" contentDisplay="CENTER" graphicTextGap="10.0" layoutX="210.0" layoutY="10.0" prefHeight="66.0" prefWidth="200.0" text="Passwort:" GridPane.columnIndex="1" GridPane.rowIndex="3" />
       <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="6">
          <children>
-            <Label alignment="CENTER" contentDisplay="CENTER" graphicTextGap="10.0" prefHeight="25.0" prefWidth="108.0" text="Kein Account?" />
+            <Label contentDisplay="CENTER" graphicTextGap="10.0" prefHeight="25.0" prefWidth="108.0" text="No account?" />
             <Button fx:id="registerButton" mnemonicParsing="false" onAction="#registerUser" text="register" />
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1">
+         <children>
+            <Label alignment="CENTER" contentDisplay="CENTER" graphicTextGap="10.0" prefHeight="65.0" prefWidth="322.0" text="Login" />
          </children>
       </HBox>
    </children>

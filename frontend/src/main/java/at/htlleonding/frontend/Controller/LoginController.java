@@ -46,8 +46,20 @@ public class LoginController {
     public void loginUser(ActionEvent actionEvent) {
 
         String name = nameField.getText();
-        String password;
+        String password = pwdField.getText();
         Socket socket = SocketHandler.getInstance().getSocket();
+
+        if(name.isEmpty() || password.isEmpty() ||
+                name.chars().allMatch(c -> c == (int)' ') || password.chars().allMatch(c -> c == (int)' ')){
+
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+
+            alert.setContentText("Empty username or password!");
+
+            alert.showAndWait();
+
+            return;
+        }
 
         try {
             byte[] hashedPassword = MessageDigest.getInstance("SHA-256").digest(pwdField.getText()

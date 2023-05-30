@@ -9,4 +9,5 @@ module htlleonding.frontend {
     opens at.htlleonding.frontend.Controller to javafx.fxml;
     exports at.htlleonding.frontend.Controller;
     exports at.htlleonding.frontend.model;
+    opens at.htlleonding.frontend.model;
 }

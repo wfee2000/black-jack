@@ -1,6 +1,7 @@
 package at.htlleonding.frontend.Controller;
 
-import at.htlleonding.frontend.SocketHandler.SocketHandler;
+import at.htlleonding.frontend.HelloApplication;
+import at.htlleonding.frontend.SessionHandler.SessionHandler;
 import at.htlleonding.frontend.model.LoginContent;
 import at.htlleonding.frontend.model.MessageContent;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +23,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 public class RegisterController {
     @FXML
@@ -42,7 +42,7 @@ public class RegisterController {
         String name = nameField.getText();
         String password = pwdField.getText();
 
-        Socket socket = SocketHandler.getInstance().getSocket();
+        Socket socket = SessionHandler.getInstance().getSocket();
 
         if(name.isEmpty() || password.isEmpty() ||
                 name.chars().allMatch(c -> c == (int)' ') || password.chars().allMatch(c -> c == (int)' ')){
@@ -80,12 +80,10 @@ public class RegisterController {
 
             if(output != null && output.equals("Connected")){
                 try {
-                    Parent window = FXMLLoader.load(Objects.requireNonNull(this.getClass()
-                            .getResource("/at/htlleonding/frontend/home.fxml")));
 
-                    Scene newScene = new Scene(window);
-                    Stage mainWindow = (Stage) content.getScene().getWindow();
-                    mainWindow.setScene(newScene);
+                    SessionHandler.getInstance().setUserName(name);
+
+                    HelloApplication.setStageTo("home.fxml");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

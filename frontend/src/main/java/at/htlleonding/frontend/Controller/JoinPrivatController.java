@@ -1,6 +1,6 @@
 package at.htlleonding.frontend.Controller;
 
-import at.htlleonding.frontend.SocketHandler.SocketHandler;
+import at.htlleonding.frontend.SessionHandler.SessionHandler;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -8,7 +8,7 @@ import javafx.scene.control.TextField;
 
 import java.net.Socket;
 
-public class JoinPrivateController {
+public class JoinPrivatController {
 
     @FXML
     public TextField nameField;
@@ -22,7 +22,7 @@ public class JoinPrivateController {
 
         String name = nameField.getText();
         String password = pwdField.getText();
-        Socket socket = SocketHandler.getInstance().getSocket();
+        Socket socket = SessionHandler.getInstance().getSocket();
 
         if(name.isEmpty() || password.isEmpty() ||
                 name.chars().allMatch(c -> c == (int)' ') || password.chars().allMatch(c -> c == (int)' ')){

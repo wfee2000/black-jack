@@ -16,8 +16,8 @@ import static org.assertj.db.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ClientThreadHandlerTest {
     static Database db;
-    static ObjectMapper mapper = new ObjectMapper();
-    static Source source = new Source("jdbc:derby:db", "", "");
+    static final ObjectMapper mapper = new ObjectMapper();
+    static final Source source = new Source("jdbc:derby:db", "", "");
     @BeforeAll
     public static void ensureDBCreated() {
         db = new Database();

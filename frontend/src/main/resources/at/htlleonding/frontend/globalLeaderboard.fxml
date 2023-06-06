@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
 <GridPane fx:id="content" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="540.0" minWidth="960.0" prefHeight="540.0" prefWidth="960.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.htlleonding.frontend.Controller.GlobalLeaderboardController">
   <columnConstraints>
@@ -23,7 +24,10 @@
    <children>
       <HBox alignment="BOTTOM_CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="3" GridPane.rowIndex="2">
          <children>
-            <Label alignment="CENTER" prefHeight="50.0" prefWidth="405.0" text="Leaderboard" />
+            <Label alignment="CENTER" prefHeight="50.0" prefWidth="405.0" text="Leaderboard">
+               <font>
+                  <Font size="20.0" />
+               </font></Label>
          </children>
       </HBox>
       <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">

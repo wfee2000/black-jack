@@ -2,6 +2,7 @@ package at.htlleonding.frontend.Controller;
 
 import at.htlleonding.frontend.HelloApplication;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -11,6 +12,7 @@ import javafx.stage.Stage;
 import java.util.Objects;
 
 public class HomeController {
+    @FXML
     public GridPane content;
 
     public void loadLeaderboard(ActionEvent actionEvent) {
@@ -18,6 +20,7 @@ public class HomeController {
     }
 
     public void joinGame(ActionEvent actionEvent) {
+        HelloApplication.setStageTo("join.fxml");
     }
 
     public void createGame(ActionEvent actionEvent) {

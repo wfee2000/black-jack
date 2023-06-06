@@ -6,9 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Dealer {
+
     private final List<Player> players;
 
     private final int rounds;
+
 
     private final int maxPlayers;
 
@@ -17,23 +19,27 @@ public class Dealer {
 
     private final List<Card> cards;
 
-    private boolean hasStarted;
 
-    public Dealer(int rounds, int maxPlayers) {
+    private boolean hasStarted;
+    private final int id;
+
+    public Dealer(int id, int rounds) {
+        this.id = id;
         this.rounds = rounds;
-        this.maxPlayers = maxPlayers;
+        maxPlayers = 4;
         cards = new ArrayList<>();
         players = new ArrayList<>();
         cardStackTake = new CardStack(true);
         cardStackPlace = new CardStack(false);
     }
 
-    public boolean addPlayer(ClientThreadHandler client) {
+    public void addPlayer(ClientThreadHandler client) {
         if (hasStarted || maxPlayers == players.size()) {
-            return false;
+            return;
         }
 
-        return players.add(new Player(client));
+        // TODO: notify players
+        players.add(new Player(client));
     }
 
     public boolean removePlayer(ClientThreadHandler client) {
@@ -41,11 +47,14 @@ public class Dealer {
             return false;
         }
 
-        return players.removeIf(player -> player.getClient() == client);
+        boolean wasRemoved = players.removeIf(player -> player.getClient() == client);
+        // TODO: notify players
+        return wasRemoved;
     }
 
     public void start() {
         hasStarted = true;
+        // TODO: change socket states
 
         for (int i = 0; i < rounds; i++) {
             executeRound();
@@ -119,5 +128,18 @@ public class Dealer {
 
         cardStackPlace.putCardsBack(cards);
         cards.clear();
+    }
+
+    public int getId() {
+        return id;
+    }
+    public int getPlayerCount() {
+        return players.size();
+    }
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
+    public boolean hasStarted() {
+        return hasStarted;
     }
 }

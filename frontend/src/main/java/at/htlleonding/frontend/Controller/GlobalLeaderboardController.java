@@ -1,6 +1,7 @@
 package at.htlleonding.frontend.Controller;
 
-import at.htlleonding.frontend.SocketHandler.SocketHandler;
+import at.htlleonding.frontend.HelloApplication;
+import at.htlleonding.frontend.SessionHandler.SessionHandler;
 import at.htlleonding.frontend.model.EntryModel;
 import at.htlleonding.frontend.model.MessageContent;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +31,7 @@ public class GlobalLeaderboardController {
 
         System.out.println("GlobalLeaderboardController.initialize()");
 
-        Socket socket = SocketHandler.getInstance().getSocket();
+        Socket socket = SessionHandler.getInstance().getSocket();
 
         try {
 
@@ -68,12 +69,7 @@ public class GlobalLeaderboardController {
     public void backToHome(ActionEvent actionEvent) {
 
         try {
-            Parent window = FXMLLoader.load(Objects.requireNonNull(this.getClass()
-                    .getResource("/at/htlleonding/frontend/home.fxml")));
-
-            Scene newScene = new Scene(window);
-            Stage mainWindow = (Stage) content.getScene().getWindow();
-            mainWindow.setScene(newScene);
+            HelloApplication.setStageTo("home.fxml");
         } catch (Exception e) {
             e.printStackTrace();
         }

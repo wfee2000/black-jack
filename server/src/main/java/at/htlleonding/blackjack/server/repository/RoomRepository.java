@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RoomRepository {
-    private List<Dealer> rooms;
+    private final List<Dealer> rooms;
     private static RoomRepository instance;
-    private List<Integer> roomIds;
+    private final List<Integer> roomIds;
 
     private RoomRepository() {
         rooms = new ArrayList<>();

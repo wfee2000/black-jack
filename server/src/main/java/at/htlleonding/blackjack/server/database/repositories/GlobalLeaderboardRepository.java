@@ -37,7 +37,7 @@ public class GlobalLeaderboardRepository {
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            List<EntryModel> allEntries = new ArrayList<EntryModel>();
+            List<EntryModel> allEntries = new ArrayList<>();
 
             while(resultSet.next()) {
                  allEntries.add(new EntryModel(

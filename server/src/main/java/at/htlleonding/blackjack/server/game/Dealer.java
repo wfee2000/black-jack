@@ -1,25 +1,21 @@
 package at.htlleonding.blackjack.server.game;
 
 import at.htlleonding.blackjack.server.ClientThreadHandler;
+import at.htlleonding.blackjack.server.contents.MessageContent;
+import at.htlleonding.blackjack.server.contents.PlayerContent;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Dealer {
-
     private final List<Player> players;
-
     private final int rounds;
-
-
     private final int maxPlayers;
-
     private final CardStack cardStackTake;
     private final CardStack cardStackPlace;
-
     private final List<Card> cards;
-
-
     private boolean hasStarted;
     private final int id;
 
@@ -38,8 +34,26 @@ public class Dealer {
             return;
         }
 
-        // TODO: notify players
-        players.add(new Player(client));
+        Player newPlayer = new Player(client);
+        try {
+            newPlayer.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                    new MessageContent("update", ClientThreadHandler.mapper.writeValueAsString(
+                            players.stream().map(playerInArray -> new PlayerContent(playerInArray.getClient()
+                                    .getName())).toArray()))));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        players.forEach(player -> {
+            try {
+                player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                        new MessageContent("add", ClientThreadHandler.mapper.writeValueAsString(
+                                new PlayerContent(newPlayer.getClient().getName())))));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        players.add(newPlayer);
     }
 
     public boolean removePlayer(ClientThreadHandler client) {
@@ -48,20 +62,40 @@ public class Dealer {
         }
 
         boolean wasRemoved = players.removeIf(player -> player.getClient() == client);
-        // TODO: notify players
+        players.forEach(player -> {
+            try {
+                player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                        new MessageContent("update", ClientThreadHandler.mapper.writeValueAsString(
+                                players.stream().map(playerInArray -> new PlayerContent(playerInArray.getClient()
+                                        .getName())).toArray()))));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        });
         return wasRemoved;
     }
 
-    public void start() {
+    public boolean start() {
         hasStarted = true;
-        // TODO: change socket states
+
+        players.forEach(player -> {
+            try {
+                player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                        new MessageContent("start", "")));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         for (int i = 0; i < rounds; i++) {
-            executeRound();
+            new Thread(this::executeRound);
         }
+
+        return true;
     }
 
     private void executeRound() {
+        players.forEach(player -> player.setBet(player.getClient().requireBet()));
         cards.add(cardStackTake.takeCard());
 
         players.forEach(player -> {

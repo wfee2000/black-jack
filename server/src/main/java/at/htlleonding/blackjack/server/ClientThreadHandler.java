@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ClientThreadHandler extends Thread {
-    private static final ObjectMapper mapper = new ObjectMapper();
+    public static final ObjectMapper mapper = new ObjectMapper();
     private final Socket client;
     private boolean isLoggedIn;
     private Dealer currentGame;
@@ -29,6 +29,8 @@ public class ClientThreadHandler extends Thread {
     private Call call;
     private String name;
     private boolean waitingForCall;
+    private int bet;
+    private boolean waitingForBet;
 
     public ClientThreadHandler(Socket client) {
         this.client = client;
@@ -169,6 +171,23 @@ public class ClientThreadHandler extends Thread {
         return dealer;
     }
 
+    private int getBet(MessageContent messageWrapper) {
+        String content = messageWrapper.content();
+        BetContent betContent;
+
+        try {
+            betContent = mapper.readValue(content, BetContent.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (betContent.bet() < 0) {
+            return -1;
+        }
+
+        return betContent.bet();
+    }
+
     @Override
     public void run() {
         try (BufferedReader clientMessagesIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
@@ -271,6 +290,24 @@ public class ClientThreadHandler extends Thread {
 
         if (currentGame.hasStarted()) {
             switch (command) {
+                case "bet" -> {
+                    if (waitingForBet) {
+                        bet = getBet(clientMessage);
+
+                        if (bet == -1) {
+                            clientMessagesOut.println("Invalid Bet");
+                            return false;
+                        }
+
+                        waitingForBet = false;
+                        notify();
+                        clientMessagesOut.println("Success");
+                        return true;
+                    }
+
+                    clientMessagesOut.println("No Bet waiting");
+                    return false;
+                }
                 case "leave" -> {
                     if (currentGame.removePlayer(this)) {
                         clientMessagesOut.println("Success");
@@ -282,8 +319,13 @@ public class ClientThreadHandler extends Thread {
                     return false;
                 }
                 case "start" -> {
-                    currentGame.start();
-                    return true;
+                    if (currentGame.start()) {
+                        clientMessagesOut.println("Success");
+                        return true;
+                    }
+
+                    clientMessagesOut.println("Waiting for bets");
+                    return false;
                 }
             }
         }
@@ -293,9 +335,11 @@ public class ClientThreadHandler extends Thread {
             call = Call.valueOf(command);
             waitingForCall = false;
             notify();
+            clientMessagesOut.println("Success");
             return true;
         }
 
+        clientMessagesOut.println("Nothing found");
         return false;
     }
 
@@ -306,6 +350,22 @@ public class ClientThreadHandler extends Thread {
             clientOut.println(request);
             wait();
             return call;
+        } catch (InterruptedException | JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void sendMessage(String message) {
+        clientOut.println(message);
+    }
+
+    public int requireBet() {
+        try {
+            String request = mapper.writeValueAsString(new MessageContent("bet", ""));
+            waitingForBet = true;
+            clientOut.println(request);
+            wait();
+            return bet;
         } catch (InterruptedException | JsonProcessingException e) {
             throw new RuntimeException(e);
         }

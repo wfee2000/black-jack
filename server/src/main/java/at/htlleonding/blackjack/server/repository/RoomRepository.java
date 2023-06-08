@@ -27,12 +27,16 @@ public class RoomRepository {
         return instance;
     }
 
-    public Dealer addRoom(int rounds) {
+    public Dealer addRoom(int maxPlayers, int rounds) {
+        return addRoom(maxPlayers, rounds, "", "");
+    }
+
+    public Dealer addRoom(int maxPlayers, int rounds, String name, String password) {
         if (roomIds.isEmpty()) {
             return null;
         }
 
-        Dealer newDealer = new Dealer(roomIds.remove(0), rounds);
+        Dealer newDealer = new Dealer(roomIds.remove(0), maxPlayers, rounds, name, password);
         rooms.add(newDealer);
         return newDealer;
     }
@@ -60,6 +64,7 @@ public class RoomRepository {
             return false;
         }
 
+        roomIds.add(dealerToRemove.getId());
         return rooms.remove(dealerToRemove);
     }
 }

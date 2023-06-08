@@ -19,6 +19,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class ClientThreadHandler extends Thread {
     public static final ObjectMapper mapper = new ObjectMapper();
@@ -117,7 +118,7 @@ public class ClientThreadHandler extends Thread {
     }
 
     public static String getRooms() {
-        RoomContent[] rooms = (RoomContent[]) RoomRepository.getInstance().getRooms().stream()
+        RoomContent[] rooms = (RoomContent[]) RoomRepository.getInstance().getRooms().stream().filter(room -> room.getPassword().isEmpty())
                 .map(room -> new RoomContent(room.getPlayerCount(), room.getMaxPlayers(), room.getId()))
                 .toArray();
 
@@ -162,7 +163,8 @@ public class ClientThreadHandler extends Thread {
             throw new RuntimeException(e);
         }
 
-        Dealer dealer = RoomRepository.getInstance().addRoom(createContent.rounds());
+        Dealer dealer = RoomRepository.getInstance().addRoom(createContent.maxPlayers(), createContent.rounds(),
+                createContent.name(), createContent.password());
 
         if (dealer == null || dealer.getPlayerCount() == dealer.getMaxPlayers()) {
             return null;

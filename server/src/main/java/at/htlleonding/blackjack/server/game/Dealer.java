@@ -18,11 +18,15 @@ public class Dealer {
     private final List<Card> cards;
     private boolean hasStarted;
     private final int id;
+    private final String password;
+    private final String name;
 
-    public Dealer(int id, int rounds) {
+    public Dealer(int id, int maxPlayers, int rounds, String name, String password) {
         this.id = id;
         this.rounds = rounds;
-        maxPlayers = 4;
+        this.name = name;
+        this.password = password;
+        this.maxPlayers = maxPlayers;
         cards = new ArrayList<>();
         players = new ArrayList<>();
         cardStackTake = new CardStack(true);
@@ -175,5 +179,11 @@ public class Dealer {
     }
     public boolean hasStarted() {
         return hasStarted;
+    }
+    public String getPassword() {
+        return password;
+    }
+    public String getName() {
+        return name;
     }
 }

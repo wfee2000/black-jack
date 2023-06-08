@@ -3,7 +3,7 @@ package at.htlleonding.frontend.Controller;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 
-public class JoinPubliController {
+public class JoinPublicController {
     @FXML
     public ListView lobbyListView;
 

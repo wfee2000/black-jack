@@ -2,29 +2,25 @@ package at.htlleonding.frontend.Controller;
 
 import at.htlleonding.frontend.HelloApplication;
 import at.htlleonding.frontend.SessionHandler.SessionHandler;
-import at.htlleonding.frontend.model.EntryModel;
+import at.htlleonding.frontend.model.EntryContent;
 import at.htlleonding.frontend.model.MessageContent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
-import javafx.stage.Stage;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Arrays;
-import java.util.Objects;
 
 public class GlobalLeaderboardController {
     @FXML
     public ListView leaderboard = new ListView<>();
+    @FXML
     public GridPane content;
 
     public void initialize() {
@@ -36,7 +32,7 @@ public class GlobalLeaderboardController {
             ObjectMapper mapper = new ObjectMapper();
             // Prepare json
             String jsonString = mapper.writeValueAsString(
-                    new MessageContent("globalleaderboard", mapper.writeValueAsString(""))
+                    new MessageContent("leaderboard", mapper.writeValueAsString(""))
             );
 
             // prepare printStream
@@ -52,7 +48,7 @@ public class GlobalLeaderboardController {
 
             String content = messageContent.content();
 
-            EntryModel[] entryContent = mapper.readValue(content, EntryModel[].class);
+            EntryContent[] entryContent = mapper.readValue(content, EntryContent[].class);
 
             leaderboard.setItems(FXCollections.observableList(Arrays.stream(entryContent).toList()));
         } catch (Exception e) {

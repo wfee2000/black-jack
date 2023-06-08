@@ -34,7 +34,6 @@ public class RegisterController {
 
     @FXML
     public void initialize() {
-        System.out.println("RegisterController.initialize()");
     }
 
     public void registerUser(ActionEvent actionEvent) {
@@ -75,8 +74,6 @@ public class RegisterController {
             BufferedReader clientReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             // wait for reader
             String output = clientReader.readLine();
-            // output returning message
-            System.out.println(output);
 
             if(output != null && output.equals("Connected")){
                 try {

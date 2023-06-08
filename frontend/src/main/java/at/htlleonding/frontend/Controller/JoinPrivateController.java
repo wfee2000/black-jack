@@ -8,7 +8,7 @@ import javafx.scene.control.TextField;
 
 import java.net.Socket;
 
-public class JoinPrivatController {
+public class JoinPrivateController {
 
     @FXML
     public TextField nameField;

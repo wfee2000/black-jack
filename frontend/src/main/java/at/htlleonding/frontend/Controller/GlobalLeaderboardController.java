@@ -29,8 +29,6 @@ public class GlobalLeaderboardController {
 
     public void initialize() {
 
-        System.out.println("GlobalLeaderboardController.initialize()");
-
         Socket socket = SessionHandler.getInstance().getSocket();
 
         try {
@@ -49,8 +47,6 @@ public class GlobalLeaderboardController {
             BufferedReader clientReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             // wait for reader
             String output = clientReader.readLine();
-            // output returning message
-            System.out.println(output);
 
             MessageContent messageContent = mapper.readValue(output, MessageContent.class);
 
@@ -62,8 +58,6 @@ public class GlobalLeaderboardController {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-        System.out.println("GlobalLeaderboardController.initialize() end");
     }
 
     public void backToHome(ActionEvent actionEvent) {

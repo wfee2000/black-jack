@@ -186,4 +186,7 @@ public class Dealer {
     public String getName() {
         return name;
     }
+    public List<Player> getPlayers(){
+        return players;
+    }
 }

@@ -1,4 +1,4 @@
 package at.htlleonding.blackjack.server.contents;
 
-public record RoomContent(int currentPlayers, int maxPlayers, int id) {
+public record RoomContent(String currentPlayers, String maxPlayers, String id, String name, String password) {
 }

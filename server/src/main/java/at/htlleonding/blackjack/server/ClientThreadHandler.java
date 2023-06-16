@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.sql.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -118,9 +120,19 @@ public class ClientThreadHandler extends Thread {
     }
 
     public static String getRooms() {
-        RoomContent[] rooms = (RoomContent[]) RoomRepository.getInstance().getRooms().stream().filter(room -> room.getPassword().isEmpty())
-                .map(room -> new RoomContent(room.getPlayerCount(), room.getMaxPlayers(), room.getId()))
-                .toArray();
+
+        List<RoomContent> rooms = new ArrayList<RoomContent>();
+
+        List<Dealer> dealers = RoomRepository.getInstance().getRooms();
+
+        dealers.forEach(dealer -> {
+            rooms.add(new RoomContent(
+                    Integer.toString(dealer.getPlayerCount()),
+                    Integer.toString(dealer.getMaxPlayers()),
+                    Integer.toString(dealer.getId()),
+                    dealer.getName(),
+                    dealer.getPassword()));
+        });
 
         String jsonString;
 
@@ -139,8 +151,9 @@ public class ClientThreadHandler extends Thread {
         JoinContent joinContent;
 
         try {
-            joinContent = mapper.readValue(content, JoinContent.class);
-        } catch (JsonProcessingException e) {
+            //joinContent = mapper.readValue(content, JoinContent.class);
+            joinContent = new JoinContent(Integer.parseInt(content));
+        } catch (/*JsonProcessingException*/ Exception e) {
             throw new RuntimeException(e);
         }
 
@@ -242,6 +255,8 @@ public class ClientThreadHandler extends Thread {
             return false;
         }
 
+        // if player not in lobby
+
         if (currentGame == null) {
             switch (command.toLowerCase()) {
                 case "rooms" -> {
@@ -290,7 +305,9 @@ public class ClientThreadHandler extends Thread {
             return false;
         }
 
-        if (currentGame.hasStarted()) {
+        // player in lobby
+
+        if (!currentGame.hasStarted()) {
             switch (command) {
                 case "bet" -> {
                     if (waitingForBet) {
@@ -331,6 +348,8 @@ public class ClientThreadHandler extends Thread {
                 }
             }
         }
+
+        // game started
 
         if (waitingForCall && Arrays.stream(Call.values())
                 .anyMatch(call -> call.toString().equalsIgnoreCase(command))) {

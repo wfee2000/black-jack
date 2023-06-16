@@ -10,6 +10,7 @@ public class SessionHandler {
     private Socket socket;
 
     private String userName;
+    private int currentRoom;
 
     private SessionHandler() {
         try {
@@ -36,5 +37,13 @@ public class SessionHandler {
 
     public String getUserName() {
         return this.userName;
+    }
+
+    public int getCurrentRoom() {
+        return currentRoom;
+    }
+
+    public void setCurrentRoom(int currentRoom) {
+        this.currentRoom = currentRoom;
     }
 }

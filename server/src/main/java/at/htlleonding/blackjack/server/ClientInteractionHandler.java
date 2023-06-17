@@ -7,8 +7,8 @@ import java.io.PrintWriter;
 
 public class ClientInteractionHandler extends Thread {
     private final ClientThreadHandler threadHandler;
-    private MessageContent clientMessage;
-    private PrintWriter clientMessagesOut;
+    private final MessageContent clientMessage;
+    private final PrintWriter clientMessagesOut;
 
     public ClientInteractionHandler(ClientThreadHandler clientThreadHandler, MessageContent clientMessage,
                                     PrintWriter clientMessagesOut) {

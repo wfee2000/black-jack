@@ -9,7 +9,6 @@ import at.htlleonding.blackjack.server.game.Call;
 import at.htlleonding.blackjack.server.game.Dealer;
 import at.htlleonding.blackjack.server.repository.RoomRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +19,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class ClientThreadHandler extends Thread {
     public static final ObjectMapper mapper = new ObjectMapper();
@@ -198,7 +196,6 @@ public class ClientThreadHandler extends Thread {
         try (BufferedReader clientMessagesIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
              PrintWriter clientMessagesOut = new PrintWriter(client.getOutputStream(), true)) {
             clientOut = clientMessagesOut;
-            //noinspection InfiniteLoopStatement
             while (true) {
                 Runnable runAfterInteraction = () -> {
                     try {
@@ -211,7 +208,7 @@ public class ClientThreadHandler extends Thread {
                             if (client.isConnected()) {
                                 clientMessagesOut.println("Something went wrong");
                             } else {
-                                return;
+                                System.exit(0);
                             }
                         }
                     } catch (InterruptedException | IOException e) {

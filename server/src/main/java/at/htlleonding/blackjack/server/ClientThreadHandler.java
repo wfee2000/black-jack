@@ -9,6 +9,7 @@ import at.htlleonding.blackjack.server.game.Call;
 import at.htlleonding.blackjack.server.game.Dealer;
 import at.htlleonding.blackjack.server.repository.RoomRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,6 +38,8 @@ public class ClientThreadHandler extends Thread {
         this.client = client;
         this.isLoggedIn = false;
     }
+
+    private Thread waitingThread;
 
     public static String login(MessageContent messageWrapper) {
         String content = messageWrapper.content();
@@ -195,15 +198,28 @@ public class ClientThreadHandler extends Thread {
         try (BufferedReader clientMessagesIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
              PrintWriter clientMessagesOut = new PrintWriter(client.getOutputStream(), true)) {
             clientOut = clientMessagesOut;
+            //noinspection InfiniteLoopStatement
             while (true) {
-                if (!processClientInteraction(mapper.readValue(clientMessagesIn.readLine(), MessageContent.class),
-                        clientMessagesOut)) {
-                    if (client.isConnected()) {
-                        clientMessagesOut.println("Something went wrong");
-                    } else {
-                        return;
+                Runnable runAfterInteraction = () -> {
+                    try {
+                        ClientInteractionHandler interaction = new ClientInteractionHandler(this,
+                                mapper.readValue(clientMessagesIn.readLine(), MessageContent.class), clientMessagesOut);
+                        interaction.start();
+                        interaction.join();
+
+                        if (!interaction.value) {
+                            if (client.isConnected()) {
+                                clientMessagesOut.println("Something went wrong");
+                            } else {
+                                return;
+                            }
+                        }
+                    } catch (InterruptedException | IOException e) {
+                        e.printStackTrace();
                     }
-                }
+                };
+
+                new Thread(runAfterInteraction).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -302,7 +318,7 @@ public class ClientThreadHandler extends Thread {
                         }
 
                         waitingForBet = false;
-                        notify();
+                        waitingThread.notify();
                         clientMessagesOut.println("Success");
                         return true;
                     }
@@ -336,7 +352,7 @@ public class ClientThreadHandler extends Thread {
                 .anyMatch(call -> call.toString().equalsIgnoreCase(command))) {
             call = Call.valueOf(command);
             waitingForCall = false;
-            notify();
+            waitingThread.notify();
             clientMessagesOut.println("Success");
             return true;
         }
@@ -350,6 +366,7 @@ public class ClientThreadHandler extends Thread {
             String request = mapper.writeValueAsString(new MessageContent("call", ""));
             waitingForCall = true;
             clientOut.println(request);
+            waitingThread = currentThread();
             wait();
             return call;
         } catch (InterruptedException | JsonProcessingException e) {
@@ -366,6 +383,7 @@ public class ClientThreadHandler extends Thread {
             String request = mapper.writeValueAsString(new MessageContent("bet", ""));
             waitingForBet = true;
             clientOut.println(request);
+            waitingThread = currentThread();
             wait();
             return bet;
         } catch (InterruptedException | JsonProcessingException e) {

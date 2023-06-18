@@ -17,11 +17,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class ClientThreadHandler extends Thread {
     public static final ObjectMapper mapper = new ObjectMapper();
@@ -148,13 +146,19 @@ public class ClientThreadHandler extends Thread {
         return jsonString;
     }
 
+    public String roomState(){
+
+        return currentGame.getPlayerCount() + "/" + currentGame.getMaxPlayers();
+    }
+
     public static Dealer join(MessageContent messageWrapper) {
         String content = messageWrapper.content();
         JoinContent joinContent;
 
         try {
-            joinContent = mapper.readValue(content, JoinContent.class);
-        } catch (JsonProcessingException e) {
+            //joinContent = mapper.readValue(content, JoinContent.class);
+            joinContent = new JoinContent(Integer.parseInt(content));
+        } catch (NumberFormatException e) {
             throw new RuntimeException(e);
         }
 
@@ -210,10 +214,13 @@ public class ClientThreadHandler extends Thread {
              PrintWriter clientMessagesOut = new PrintWriter(client.getOutputStream(), true)) {
             clientOut = clientMessagesOut;
             while (true) {
+
+                MessageContent message = mapper.readValue(clientMessagesIn.readLine(), MessageContent.class);
+
                 Runnable runAfterInteraction = () -> {
                     try {
-                        ClientInteractionHandler interaction = new ClientInteractionHandler(this,
-                                mapper.readValue(clientMessagesIn.readLine(), MessageContent.class), clientMessagesOut);
+                        ClientInteractionHandler interaction = new ClientInteractionHandler(this, message
+                                ,clientMessagesOut);
                         interaction.start();
                         interaction.join();
 
@@ -224,7 +231,7 @@ public class ClientThreadHandler extends Thread {
                                 System.exit(0);
                             }
                         }
-                    } catch (InterruptedException | IOException e) {
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 };
@@ -340,6 +347,9 @@ public class ClientThreadHandler extends Thread {
 
                     clientMessagesOut.println("Waiting for bets");
                     return false;
+                }
+                case "roomstate" -> {
+                    clientMessagesOut.println(roomState());
                 }
             }
         }

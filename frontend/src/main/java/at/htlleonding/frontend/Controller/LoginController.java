@@ -86,6 +86,7 @@ public class LoginController {
 
                 HelloApplication.setStageTo("home.fxml");
             } else {
+                output = clientReader.readLine();
                 Alert alert = new Alert(Alert.AlertType.WARNING);
 
                 alert.setContentText("Wrong username or password!");

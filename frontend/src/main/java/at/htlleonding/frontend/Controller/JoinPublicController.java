@@ -95,7 +95,7 @@ public class JoinPublicController {
             output = clientReader.readLine();
 
             if(output != null && output.equals("Success")){
-                HelloApplication.setStageTo("game.fxml");
+                HelloApplication.setStageTo("waitingRoom.fxml");
             }
             else{
                 Alert full = new Alert(Alert.AlertType.INFORMATION, "It seems like the lobby is full");

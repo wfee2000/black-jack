@@ -64,7 +64,7 @@ public class CreatePrivateController {
 
             if(output != null && output.equals("Success")){
                 // load into game
-                HelloApplication.setStageTo("game.fxml");
+                HelloApplication.setStageTo("waitingRoom.fxml");
             }
             else{
                 Alert full = new Alert(Alert.AlertType.INFORMATION, "Sorry something went wrong");

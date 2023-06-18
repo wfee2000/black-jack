@@ -79,7 +79,7 @@ public class JoinPrivateController {
 
 
             if (output != null && output.equals("Success")) {
-                HelloApplication.setStageTo("game.fxml");
+                HelloApplication.setStageTo("waitingRoom.fxml");
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
 

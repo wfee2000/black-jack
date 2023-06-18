@@ -85,6 +85,7 @@ public class RegisterController {
                     e.printStackTrace();
                 }
             }else{
+                output = clientReader.readLine();
                 Alert alert = new Alert(Alert.AlertType.WARNING);
 
                 alert.setContentText("User already exists!");

@@ -18,6 +18,22 @@ public class Player {
         return isOut;
     }
     public void isOut(boolean isOut) {
+        if (isOut) {
+            try {
+                client.sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                        new MessageContent("out", "")));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                client.sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                        new MessageContent("continue", "")));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+
         this.isOut = isOut;
     }
     private boolean isOut;
@@ -41,10 +57,6 @@ public class Player {
     }
 
     public boolean doubleDown(Card card) {
-        if (coins < bet) {
-            return false;
-        }
-
         hit(card);
         coins -= bet;
         bet *= 2;
@@ -68,7 +80,7 @@ public class Player {
     }
 
     public void stay() {
-        isOut = true;
+        isOut(true);
     }
 
     public void triggerLoose() {
@@ -110,14 +122,9 @@ public class Player {
         bet = 0;
     }
 
-    public boolean setBet(int bet) {
-        if (coins < bet) {
-            return false;
-        }
-
+    public void setBet(int bet) {
         coins -= bet;
         this.bet = bet;
-        return true;
     }
 
     public List<Card> takeCardsAway() {

@@ -1,10 +1,7 @@
 package at.htlleonding.blackjack.server.game;
 
 import at.htlleonding.blackjack.server.ClientThreadHandler;
-import at.htlleonding.blackjack.server.contents.CardContent;
-import at.htlleonding.blackjack.server.contents.MessageContent;
-import at.htlleonding.blackjack.server.contents.PlayerCardContent;
-import at.htlleonding.blackjack.server.contents.PlayerContent;
+import at.htlleonding.blackjack.server.contents.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.ArrayList;
@@ -104,7 +101,19 @@ public class Dealer {
     }
 
     private void executeRound() {
-        players.forEach(player -> player.setBet(player.getClient().requireBet()));
+        players.forEach(player -> {
+            int bet = player.getClient().requireBet();
+            player.setBet(bet);
+            players.forEach(notifyPlayers -> {
+                try {
+                    notifyPlayers.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                            new MessageContent("betted", ClientThreadHandler.mapper.writeValueAsString(
+                                    new PlayerBetContent(player.getClient().getName(), bet)))));
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            });
+        });
         addDealerCard();
 
         players.forEach(player -> {

@@ -7,6 +7,7 @@ import at.htlleonding.blackjack.server.database.repositories.GlobalLeaderboardRe
 import at.htlleonding.blackjack.server.database.repositories.PlayerRepository;
 import at.htlleonding.blackjack.server.game.Call;
 import at.htlleonding.blackjack.server.game.Dealer;
+import at.htlleonding.blackjack.server.game.Player;
 import at.htlleonding.blackjack.server.repository.RoomRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -341,22 +342,38 @@ public class ClientThreadHandler extends Thread {
                 }
                 case "start" -> {
                     if (currentGame.start()) {
-                        clientMessagesOut.println("Success");
                         return true;
                     }
 
-                    clientMessagesOut.println("Waiting for bets");
                     return false;
                 }
                 case "roomstate" -> {
                     clientMessagesOut.println(roomState());
+                    return true;
                 }
             }
+        }
+        else if (currentGame.hasStarted() && command.equals("start")) {
+            return true;
         }
 
         // game started
 
         if (waitingForCall) {
+
+            if(command.equals("getplayers")){
+                List<Player> players = currentGame.getPlayers();
+
+                MessageContent messageContent = new MessageContent("players", mapper.writeValueAsString(
+                        players.stream().map(player -> new PlayerContent(player.getClient().getName()))
+                ));
+
+                clientMessagesOut.println(messageContent);
+
+                return true;
+            }
+
+
             if (Arrays.stream(Call.values()).anyMatch(call -> call.toString().equalsIgnoreCase(command))) {
                 call = Call.valueOf(command);
                 waitingForCall = false;

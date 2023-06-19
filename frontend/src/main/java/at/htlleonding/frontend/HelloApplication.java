@@ -25,7 +25,11 @@ public class HelloApplication extends Application {
         Scene scene;
 
         try {
-            scene = new Scene(fxmlLoader.load(), 960, 540);
+            if(path.equals("game.fxml")){
+                scene = new Scene(fxmlLoader.load(), 1280, 720);
+            }else{
+                scene = new Scene(fxmlLoader.load(), 960, 540);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

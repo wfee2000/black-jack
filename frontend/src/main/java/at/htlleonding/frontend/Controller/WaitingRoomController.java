@@ -41,7 +41,35 @@ public class WaitingRoomController extends Thread{
     }
 
     public void startGame(ActionEvent actionEvent) {
-        HelloApplication.setStageTo("game.fxml");
+
+        Socket socket = SessionHandler.getInstance().getSocket();
+
+        try {
+
+            ObjectMapper mapper = new ObjectMapper();
+            // Prepare json
+            String jsonString = mapper.writeValueAsString(
+                    new MessageContent("start", mapper.writeValueAsString(""))
+            );
+
+            // prepare printStream
+            PrintStream printStream = new PrintStream(socket.getOutputStream(), true);
+            // send json
+            printStream.println(jsonString);
+            // prepare reader
+            BufferedReader clientReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            // wait for reader
+
+            while(!output.contains("start")){
+                output = clientReader.readLine();
+                System.out.println(output);
+            }
+
+            HelloApplication.setStageTo("game.fxml");
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -66,17 +94,15 @@ public class WaitingRoomController extends Thread{
                 BufferedReader clientReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 // wait for reader
 
-                Platform.runLater(() -> {
-                    try {
-                        output = clientReader.readLine();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    if (output.length() == 3 && output.contains("/")) {
-                        playerCount.setText("[" + output + "]");
-                        isRoomFull = output.split("/")[0].equals(output.split("/")[1]);
-                    }
-                });
+                try {
+                    output = clientReader.readLine();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                if (output.length() == 3 && output.contains("/")) {
+                    isRoomFull = output.split("/")[0].equals(output.split("/")[1]);
+                }
+
             }
 
             startButton.setDisable(false);

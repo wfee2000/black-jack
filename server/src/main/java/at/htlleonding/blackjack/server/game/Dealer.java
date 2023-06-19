@@ -105,20 +105,14 @@ public class Dealer {
 
     private void executeRound() {
         players.forEach(player -> player.setBet(player.getClient().requireBet()));
-        cards.add(cardStackTake.takeCard());
-        players.forEach(player -> {
-            try {
-                player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
-                        new MessageContent("dealerAdd", ClientThreadHandler.mapper.writeValueAsString(new CardContent(cards.get(0))))));
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-        });
+        addDealerCard(cardStackTake.takeCard());
 
         players.forEach(player -> {
             if (player.distribute(new ArrayList<>(cardStackTake.takeCards(2)))) {
                 player.isOut(true);
                 player.hasBlackJack(true);
+            } else {
+                player.isOut(false);
             }
         });
 
@@ -148,7 +142,7 @@ public class Dealer {
             });
         }
 
-        cards.add(cardStackTake.takeCard());
+        addDealerCard(cardStackTake.takeCard());
 
         if (Card.getSum(cards) == 21) {
             players.forEach(player -> {
@@ -158,11 +152,20 @@ public class Dealer {
                     player.triggerDraw();
                 }
             });
+        } else {
+            players.forEach(player -> {
+                try {
+                    player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                            new MessageContent("no-blackjack?", "")));
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            });
         }
 
         // players finished playing
         while (Card.getSum(cards) < 17) {
-            cards.add(cardStackTake.takeCard());
+            addDealerCard(cardStackTake.takeCard());
         }
 
         players.forEach(player -> {
@@ -188,6 +191,20 @@ public class Dealer {
 
         cardStackPlace.putCardsBack(cards);
         cards.clear();
+    }
+
+    public void addDealerCard(Card card) {
+        cards.add(card);
+
+        players.forEach(player -> {
+            try {
+                player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                        new MessageContent("dealerAdd", ClientThreadHandler.mapper.writeValueAsString(
+                                new CardContent(card)))));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public int getId() {

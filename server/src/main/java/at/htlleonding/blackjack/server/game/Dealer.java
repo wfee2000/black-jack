@@ -1,7 +1,9 @@
 package at.htlleonding.blackjack.server.game;
 
 import at.htlleonding.blackjack.server.ClientThreadHandler;
+import at.htlleonding.blackjack.server.contents.CardContent;
 import at.htlleonding.blackjack.server.contents.MessageContent;
+import at.htlleonding.blackjack.server.contents.PlayerCardContent;
 import at.htlleonding.blackjack.server.contents.PlayerContent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -106,11 +108,20 @@ public class Dealer {
         cards.add(cardStackTake.takeCard());
 
         players.forEach(player -> {
-            player.distribute(new ArrayList<>(cardStackTake.takeCards(2)));
-
-            if (Card.getSum(player.getCards()) > 20) {
+            if (player.distribute(new ArrayList<>(cardStackTake.takeCards(2)))) {
                 player.isOut(true);
                 player.hasBlackJack(true);
+            }
+        });
+
+        players.forEach(player -> {
+            try {
+                player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(new MessageContent("distributed",
+                        ClientThreadHandler.mapper.writeValueAsString(players.stream()
+                                .map(playerCards -> new PlayerCardContent(playerCards.getClient().getName(),
+                                        playerCards.getCards().toArray(new Card[0]))).toArray()))));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
             }
         });
 

@@ -64,12 +64,6 @@ public class Player {
 
     public boolean distribute(List<Card> cards) {
         this.cards.addAll(cards);
-        try {
-            client.sendMessage(ClientThreadHandler.mapper.writeValueAsString(new MessageContent("distributed",
-                    ClientThreadHandler.mapper.writeValueAsString(cards.stream().map(CardContent::new).toArray()))));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
         return Card.getSum(cards) == 21;
     }
 

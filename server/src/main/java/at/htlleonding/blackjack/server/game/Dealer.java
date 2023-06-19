@@ -105,7 +105,7 @@ public class Dealer {
 
     private void executeRound() {
         players.forEach(player -> player.setBet(player.getClient().requireBet()));
-        addDealerCard(cardStackTake.takeCard());
+        addDealerCard();
 
         players.forEach(player -> {
             if (player.distribute(new ArrayList<>(cardStackTake.takeCards(2)))) {
@@ -142,7 +142,7 @@ public class Dealer {
             });
         }
 
-        addDealerCard(cardStackTake.takeCard());
+        addDealerCard();
 
         if (Card.getSum(cards) == 21) {
             players.forEach(player -> {
@@ -165,7 +165,7 @@ public class Dealer {
 
         // players finished playing
         while (Card.getSum(cards) < 17) {
-            addDealerCard(cardStackTake.takeCard());
+            addDealerCard();
         }
 
         players.forEach(player -> {
@@ -193,7 +193,8 @@ public class Dealer {
         cards.clear();
     }
 
-    public void addDealerCard(Card card) {
+    public void addDealerCard() {
+        Card card = cardStackTake.takeCard();
         cards.add(card);
 
         players.forEach(player -> {

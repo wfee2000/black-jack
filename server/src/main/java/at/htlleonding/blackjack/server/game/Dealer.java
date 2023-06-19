@@ -47,7 +47,7 @@ public class Dealer {
                             players.stream().map(playerInArray -> new PlayerContent(playerInArray.getClient()
                                     .getName())).toArray()))));
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
         players.forEach(player -> {
@@ -56,7 +56,7 @@ public class Dealer {
                         new MessageContent("add", ClientThreadHandler.mapper.writeValueAsString(
                                 new PlayerContent(newPlayer.getClient().getName())))));
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
         });
         players.add(newPlayer);
@@ -75,7 +75,7 @@ public class Dealer {
                                 players.stream().map(playerInArray -> new PlayerContent(playerInArray.getClient()
                                         .getName())).toArray()))));
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
         });
         return wasRemoved;
@@ -89,7 +89,7 @@ public class Dealer {
                 player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
                         new MessageContent("start", "")));
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
         });
 
@@ -106,6 +106,14 @@ public class Dealer {
     private void executeRound() {
         players.forEach(player -> player.setBet(player.getClient().requireBet()));
         cards.add(cardStackTake.takeCard());
+        players.forEach(player -> {
+            try {
+                player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                        new MessageContent("dealerAdd", ClientThreadHandler.mapper.writeValueAsString(new CardContent(cards.get(0))))));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        });
 
         players.forEach(player -> {
             if (player.distribute(new ArrayList<>(cardStackTake.takeCards(2)))) {
@@ -121,7 +129,7 @@ public class Dealer {
                                 .map(playerCards -> new PlayerCardContent(playerCards.getClient().getName(),
                                         playerCards.getCards().toArray(new Card[0]))).toArray()))));
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
         });
 

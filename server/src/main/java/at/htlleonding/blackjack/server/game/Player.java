@@ -66,12 +66,6 @@ public class Player {
 
     public void hit(Card card) {
         cards.add(card);
-        try {
-            client.sendMessage(ClientThreadHandler.mapper.writeValueAsString(new MessageContent("add",
-                    ClientThreadHandler.mapper.writeValueAsString(new CardContent(card)))));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public boolean distribute(List<Card> cards) {

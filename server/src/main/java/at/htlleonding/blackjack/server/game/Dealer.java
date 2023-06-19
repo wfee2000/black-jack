@@ -130,9 +130,47 @@ public class Dealer {
         while (!players.stream().allMatch(Player::isOut)) {
             players.stream().filter(player -> !player.isOut()).forEach(player -> {
                 switch (player.getClient().requireCall()) {
-                    case Hit -> player.hit(cardStackTake.takeCard());
-                    case Stay -> player.stay();
-                    case DoubleDown -> player.doubleDown(cardStackTake.takeCard());
+                    case Hit -> {
+                        Card newCard = cardStackTake.takeCard();
+                        player.hit(newCard);
+                        players.forEach(notifyPlayer -> {
+                            try {
+                                notifyPlayer.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                                        new MessageContent("hit", ClientThreadHandler.mapper.writeValueAsString(
+                                                new PlayerCardContent(player.getClient().getName(),
+                                                        new Card[]{newCard})))));
+                            } catch (JsonProcessingException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                    }
+                    case Stay -> {
+                        player.stay();
+                        players.forEach(notifyPlayer -> {
+                            try {
+                                notifyPlayer.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                                        new MessageContent("stay",
+                                                ClientThreadHandler.mapper.writeValueAsString(
+                                                        new PlayerContent(player.getClient().getName())))));
+                            } catch (JsonProcessingException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                    }
+                    case DoubleDown -> {
+                        Card newCard = cardStackTake.takeCard();
+                        player.doubleDown(newCard);
+                        players.forEach(notifyPlayer -> {
+                            try {
+                                notifyPlayer.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                                        new MessageContent("doubleDown", ClientThreadHandler.mapper.writeValueAsString(
+                                                new PlayerCardContent(player.getClient().getName(),
+                                                        new Card[]{newCard})))));
+                            } catch (JsonProcessingException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                    }
                     case Surrender -> player.surrender();
                 }
 

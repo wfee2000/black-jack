@@ -22,7 +22,7 @@ public class HelloApplication extends Application {
 
     public static void setStageTo(String path) {
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource(path));
-        Scene scene = null;
+        Scene scene;
 
         try {
             scene = new Scene(fxmlLoader.load(), 960, 540);

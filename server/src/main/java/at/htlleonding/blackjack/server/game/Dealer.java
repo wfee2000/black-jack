@@ -91,10 +91,13 @@ public class Dealer {
             }
         });
 
-        for (int i = 0; i < rounds; i++) {
-            new Thread(this::executeRound);
-        }
+        Runnable runnable = () -> {
+            for (int i = 0; i < rounds; i++) {
+                new Thread(this::executeRound);
+            }
+        };
 
+        new Thread(runnable).start();
         return true;
     }
 

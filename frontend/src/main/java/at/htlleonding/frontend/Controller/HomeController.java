@@ -24,5 +24,6 @@ public class HomeController {
     }
 
     public void createGame(ActionEvent actionEvent) {
+        HelloApplication.setStageTo("create.fxml");
     }
 }

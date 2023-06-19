@@ -40,7 +40,7 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-        System.out.println("LoginController.initialize()");
+
     }
 
     public void loginUser(ActionEvent actionEvent) {
@@ -71,8 +71,6 @@ public class LoginController {
             String jsonString = mapper.writeValueAsString(new MessageContent("login",
                     mapper.writeValueAsString(new LoginContent(name, password))));
 
-            System.out.println(jsonString);
-
             // prepare printStream
             PrintStream printStream = new PrintStream(socket.getOutputStream(), true);
             // send json
@@ -81,8 +79,6 @@ public class LoginController {
             BufferedReader clientReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             // wait for reader
             String output = clientReader.readLine();
-            // output returning message
-            System.out.println(output);
 
             if (output != null && output.equals("Connected")) {
 
@@ -90,6 +86,7 @@ public class LoginController {
 
                 HelloApplication.setStageTo("home.fxml");
             } else {
+                output = clientReader.readLine();
                 Alert alert = new Alert(Alert.AlertType.WARNING);
 
                 alert.setContentText("Wrong username or password!");

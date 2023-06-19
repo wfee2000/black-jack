@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<GridPane fx:id="content" fx:controller="at.htlleonding.frontend.Controller.JoinPubliController" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="540.0" minWidth="960.0" prefHeight="540.0" prefWidth="960.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.2-ea">
+<GridPane fx:id="content" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="540.0" minWidth="960.0" prefHeight="540.0" prefWidth="960.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.htlleonding.frontend.Controller.JoinPublicController">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" maxWidth="351.0" minWidth="10.0" prefWidth="153.0" />
     <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="577.0" minWidth="10.0" prefWidth="557.0" />
@@ -22,6 +22,6 @@
             <Font size="20.0" />
          </font>
       </Label>
-      <ListView fx:id="lobbyListView" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+      <ListView fx:id="lobbyListView" onKeyPressed="#lobbySelected" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
    </children>
 </GridPane>

@@ -1,6 +1,6 @@
 package at.htlleonding.frontend.model;
 
-public record EntryModel(String name, String points) {
+public record EntryContent(String name, String points) {
 
     @Override
     public String toString(){

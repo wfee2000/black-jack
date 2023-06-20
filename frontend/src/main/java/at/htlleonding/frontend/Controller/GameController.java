@@ -83,7 +83,9 @@ public class GameController {
             playerContainer.getChildren().add(playerBox);
         }
 
-        startRound();
+        Runnable start = this::startRound;
+
+        new Thread(start).start();
     }
 
     public void startRound() {
@@ -422,15 +424,7 @@ public class GameController {
     public void getPlayers(Socket socket){
         try {
             ObjectMapper mapper = new ObjectMapper();
-            // Prepare json
-            String jsonString = mapper.writeValueAsString(
-                    new MessageContent("getplayers", "")
-            );
 
-            // prepare printStream
-            PrintStream printStream = new PrintStream(socket.getOutputStream(), true);
-            // send json
-            printStream.println(jsonString);
             // prepare reader
             BufferedReader clientReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             // wait for reader

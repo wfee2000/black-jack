@@ -5,15 +5,19 @@ import at.htlleonding.frontend.SessionHandler.SessionHandler;
 import at.htlleonding.frontend.model.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,30 +25,24 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Objects;
+
+import static at.htlleonding.frontend.SessionHandler.SessionHandler.*;
 
 public class GameController {
     @FXML
     public Label moneyCounter;
     @FXML
-    public TextField moneyInput;
-    @FXML
-    public Button drawBtn;
-    @FXML
-    public Button holdBtn;
-    @FXML
-    public Button doubleBtn;
-    @FXML
-    public Button betBtn;
+    public HBox playerContainer;
     @FXML
     public Button homeBtn;
     @FXML
-    public HBox playerContainer;
+    public HBox dealerBox;
 
-    IntegerProperty betAmount;
     int money = 100;
+
+    int betAmount;
 
     PlayerContent[] players;
 
@@ -52,128 +50,347 @@ public class GameController {
 
     List<Card> dealerCards = new ArrayList<>();
 
+    Scene scene;
+
     public void initialize(){
+        Socket socket = getInstance().getSocket();
 
-        Socket socket = SessionHandler.getInstance().getSocket();
-
-        ObjectMapper mapper = new ObjectMapper();
+        scene = dealerBox.getScene();
 
         getPlayers(socket);
 
-        // create containers for players and space in fxml
+        for (PlayerContent player : players) {
+            VBox playerBox = new VBox();
 
-        betAmount = new SimpleIntegerProperty(0);
+            playerBox.setPrefWidth(1280 - (double) (10 * (players.length - 1)) / players.length);
+            playerBox.setId(player.name());
+            playerBox.setAlignment(Pos.CENTER);
 
-        startRound();
+            Label nameOfPlayer = new Label();
+            nameOfPlayer.setId(player.name() + "name");
+
+            Label betOfPlayer = new Label();
+            betOfPlayer.setId(player.name() + "bet");
+
+            HBox cardContainer = new HBox();
+            cardContainer.setId(player.name() + "cards");
+            cardContainer.setAlignment(Pos.CENTER);
+
+            playerBox.getChildren().add(nameOfPlayer);
+            playerBox.getChildren().add(betOfPlayer);
+            playerBox.getChildren().add(cardContainer);
+
+            playerContainer.getChildren().add(playerBox);
+        }
+
+        Runnable start = this::startRound;
+
+        new Thread(start).start();
     }
 
-    public void startRound(){
-
+    public void startRound() {
         Socket socket = SessionHandler.getInstance().getSocket();
-
-        ObjectMapper mapper = new ObjectMapper();
-
-        AtomicReference<String> output = new AtomicReference<>("");
-
-        doubleBtn.setDisable(true);
-        drawBtn.setDisable(true);
-        homeBtn.setDisable(true);
-        holdBtn.setDisable(true);
-        betBtn.setDisable(true);
-
+        // prepare reader
+        BufferedReader clientReader = null;
         try {
-            // prepare reader
-            BufferedReader clientReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            // wait for reader
+            clientReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-            for(int i = 0; i < players.length+ 1; i++){
-                String betsOutput = clientReader.readLine(); // waiting for bet
+        if (clientReader == null) {
+            return;
+        }
+        // wait for reader
 
-                MessageContent messageContent = mapper.readValue(betsOutput, MessageContent.class);
+        processBets(socket, clientReader);
+        moneyCounter.setText("Money: " + money);
 
-                if(messageContent.method().equals("bet")){
-                    // i have to bet
-                    betBtn.setDisable(false);
-                }
-                else{
-                    // updating
-                }
+        dealerCards.add(getDealersCard(clientReader));
+        listOfPlayers = getDistributedPlayerCards(clientReader);
+
+        // fill fxml
+        updatePlayersFxml();
+        updateDealersFxml();
+
+        if (isPlayerOut(clientReader)) {
+            waitTillRoundEnd();
+            return;
+        }
+
+        MessageContent messageContent = null;
+
+        do {
+            try {
+                messageContent = unwrapContent(clientReader.readLine(), MessageContent.class);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
-            betAmount.addListener(amount -> {
-                output.set(getServerResponse(socket, "bet", "")); // gets Dealer
-
-                try {
-                    MessageContent messageContent = mapper.readValue(output.get(), MessageContent.class);
-
-                    String content = messageContent.content();
-
-                    dealerCards.add(mapper.readValue(content, CardContent.class).card());
-
-                    messageContent = mapper.readValue(clientReader.readLine(), MessageContent.class);
-
-                    content = messageContent.content();
-
-                    PlayerCardContent[] playerCardContent = mapper.readValue(content, PlayerCardContent[].class);
-
-                    for (PlayerCardContent player : playerCardContent) {
-
-                        Player newPlayer = new Player(player.name());
-
-                        newPlayer.addCards(player.cards());
-
-                        listOfPlayers.add(newPlayer);
-                    }
-
-                    // fill fxml
-
-                    String amIout = clientReader.readLine();
-
-                    MessageContent messageContentOut = mapper.readValue(amIout, MessageContent.class);
-
-                    if(messageContentOut.method().equals("out")){
-                        doubleBtn.setDisable(true);
-                        drawBtn.setDisable(true);
-                        homeBtn.setDisable(true);
-                        holdBtn.setDisable(true);
-                        betBtn.setDisable(true);
-
+            switch (Objects.requireNonNull(messageContent).method()) {
+                case "call" -> {
+                    if (isPlayerOut(sendCall(socket, getCall()))) {
                         waitTillRoundEnd();
                         return;
                     }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+                case "hit", "doubleDown" -> {
+                    PlayerCardContent playerCardContent =
+                            unwrapContent(messageContent.content(), PlayerCardContent.class); // one card
 
-                try {
-                    clientReader.readLine(); // call
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    listOfPlayers.stream().filter(
+                            player -> player.getName().equals(playerCardContent.name())
+                    ).findFirst().orElseThrow().getCards().add(playerCardContent.cards()[0]);
+
+                    updatePlayersFxml();
                 }
+            }
 
-                holdBtn.setDisable(false);
-                drawBtn.setDisable(false);
-                doubleBtn.setDisable(false);
+            updatePlayersFxml();
+        } while (true);
+    }
 
-                betBtn.setDisable(true);
+    public void updatePlayersFxml(){
+        for (Node box : playerContainer.getChildren()) {
 
-                moneyCounter.setText("Money: " + moneyCounter);
+            Player playerToFill = listOfPlayers.stream().filter(
+                    player -> player.getName().equalsIgnoreCase(box.getId())
+            ).findFirst().orElseThrow();
 
-            });
+            Label playerBet = (Label) scene.lookup(playerToFill.getName() + "bet");
+            Label playerName = (Label) scene.lookup(playerToFill.getName() + "name");
+
+            playerBet.setText(Integer.toString(playerToFill.getBet()));
+            playerName.setText(playerToFill.getName());
+
+            // set cards
+
+            HBox cardContainer = (HBox) scene.lookup(playerToFill.getName() + "cards");
+
+            cardContainer.getChildren().removeAll();
+
+            for (Card card: playerToFill.getCards()) {
+                ImageView cardImg;
+
+                String cardValue = getStringValueOfCard(card);
+
+                cardImg = new ImageView(new Image(
+                        Objects.requireNonNull(getClass().getResourceAsStream(
+                                "card/" + card.sign() + "/" + cardValue + ".svg")))
+                );
+
+                cardContainer.getChildren().add(cardImg);
+            }
         }
-        catch (Exception e){
+    }
+
+    public void updateDealersFxml(){
+        dealerBox.getChildren().removeAll();
+
+        for(Card card: dealerCards){
+            ImageView cardImg;
+
+            String cardValue = getStringValueOfCard(card);
+
+            cardImg = new ImageView(new Image(
+                    Objects.requireNonNull(getClass().getResourceAsStream(
+                            "card/" + card.sign() + "/" + cardValue + ".svg")))
+            );
+
+            dealerBox.getChildren().add(cardImg);
+        }
+    }
+
+    public String getStringValueOfCard(Card card){
+
+        return switch (card.value()) {
+            case A -> "14";
+            case _2 -> "2";
+            case _3 -> "3";
+            case _4 -> "4";
+            case _5 -> "5";
+            case _6 -> "6";
+            case _7 -> "7";
+            case _8 -> "8";
+            case _9 -> "9";
+            case _10 -> "10";
+            case J -> "11";
+            case Q -> "12";
+            case K -> "13";
+        };
+    }
+
+    private String sendCall(Socket socket, Call call) {
+        return getServerResponse(socket, call.name(), "");
+    }
+
+    private boolean isPlayerOut(BufferedReader clientReader) {
+        String isOut = null;
+        try {
+            isOut = clientReader.readLine();
+        } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return isPlayerOut(isOut);
+    }
+
+    private boolean isPlayerOut(String input) {
+        MessageContent messageContentOut = unwrapContent(input, MessageContent.class);
+        return messageContentOut.method().equalsIgnoreCase("out");
+    }
+
+    private List<Player> getDistributedPlayerCards(BufferedReader clientReader) {
+        MessageContent messageContent = null;
+        try {
+            messageContent = unwrapContent(clientReader.readLine(), MessageContent.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        assert messageContent != null;
+        String content = messageContent.content();
+        PlayerCardContent[] playerCardContent = unwrapContent(content, PlayerCardContent[].class);
+        List<Player> players = new ArrayList<>();
+
+        for (PlayerCardContent player : playerCardContent) {
+
+            Player newPlayer = new Player(player.name());
+
+            newPlayer.addCards(player.cards());
+
+            players.add(newPlayer);
+        }
+
+        return players;
+    }
+
+    private Card getDealersCard(BufferedReader clientReader) {
+        String output = null; // gets Dealer
+        try {
+            output = clientReader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        MessageContent messageContent = unwrapContent(output, MessageContent.class);
+
+        String content = messageContent.content();
+
+        return unwrapContent(content, CardContent.class).card();
+    }
+
+    private void processBets(Socket socket, BufferedReader clientReader) {
+        for(int i = 0; i < players.length; i++){
+            String betsOutput = null; // waiting for bet
+            try {
+                betsOutput = clientReader.readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            MessageContent messageContent = unwrapContent(betsOutput, MessageContent.class);
+
+            if (messageContent.method().equals("bet")){
+                // I have to bet
+
+                betAmount = getBet();
+                money -= betAmount;
+                getServerResponse(socket, "bet", wrapObject(new BetContent(betAmount)));
+            } else {
+                // other have to bet
+                PlayerBetContent betContent = unwrapContent(messageContent.content(), PlayerBetContent.class);
+                listOfPlayers.stream().filter(player -> player.getName().equals(betContent.name())).findFirst()
+                        .orElseThrow().setBet(betContent.bet());
+                updatePlayersFxml();
+            }
+        }
+    }
+
+    private int getBet() {
+        Dialog<Integer> dialog = new Dialog<>();
+        ButtonType betButtonType = new ButtonType("Bet", ButtonBar.ButtonData.APPLY);
+        dialog.getDialogPane().getButtonTypes().setAll(betButtonType);
+
+        TextField moneyInput = new TextField();
+        Label error = new Label();
+        error.setTextFill(Color.RED);
+        VBox vBox = new VBox();
+        vBox.getChildren().setAll(error, moneyInput);
+        Node betButton = dialog.getDialogPane().lookupButton(betButtonType);
+        betButton.setDisable(true);
+
+        BooleanBinding isBet = Bindings.createBooleanBinding(
+            () -> {
+                int moneyBet;
+
+                try {
+                    moneyBet = Integer.parseInt(moneyInput.getText());
+
+                    if (moneyBet > 100) {
+                        error.setText("Max 100");
+                        return false;
+                    } else if (moneyBet == 0) {
+                        error.setText("Min 1");
+                        return false;
+                    }
+
+                } catch (NumberFormatException e){
+                    error.setText("Only integers");
+                    return false;
+                }
+
+                error.setText("");
+                return true;
+            },
+            moneyInput.textProperty()
+        );
+
+        isBet.addListener(e -> betButton.setDisable(!isBet.get()));
+        dialog.getDialogPane().setContent(vBox);
+        dialog.setResultConverter(dialogButton -> Integer.parseInt(moneyInput.getText()));
+        return dialog.showAndWait().orElseThrow();
+    }
+
+    private Call getCall() {
+        Dialog<Call> dialog = new Dialog<>();
+        ButtonType callButtonType = new ButtonType("Call", ButtonBar.ButtonData.APPLY);
+        dialog.getDialogPane().getButtonTypes().setAll(callButtonType);
+
+        TextField moneyInput = new TextField();
+        Label error = new Label();
+        error.setTextFill(Color.RED);
+        ComboBox<Call> callSelector = new ComboBox<>();
+        callSelector.getItems().setAll(Call.values());
+        callSelector.setPromptText("Calls");
+        VBox vBox = new VBox();
+        vBox.getChildren().setAll(error, callSelector);
+        Node callButton = dialog.getDialogPane().lookupButton(callButtonType);
+        callButton.setDisable(true);
+
+        BooleanBinding isCall = Bindings.createBooleanBinding(
+            () -> {
+                if (callSelector.getValue() == null) {
+                    error.setText("Please Select a Call");
+                    return false;
+                }
+
+                error.setText("");
+                return true;
+            },
+            moneyInput.textProperty()
+        );
+
+        isCall.addListener(e -> callButton.setDisable(!isCall.get()));
+        dialog.getDialogPane().setContent(vBox);
+        dialog.setResultConverter(dialogButton -> callSelector.getValue());
+
+        return dialog.showAndWait().orElseThrow();
     }
 
     public void drawCard(ActionEvent actionEvent) {
 
-        Socket socket = SessionHandler.getInstance().getSocket();
-
-        doubleBtn.setDisable(true);
-        drawBtn.setDisable(true);
-        holdBtn.setDisable(true);
+        Socket socket = getInstance().getSocket();
 
         String output = getServerResponse(socket, "hit", "");
 
@@ -182,12 +399,7 @@ public class GameController {
     }
 
     public void doubleBet(ActionEvent actionEvent) {
-
-        Socket socket = SessionHandler.getInstance().getSocket();
-
-        doubleBtn.setDisable(true);
-        drawBtn.setDisable(true);
-        holdBtn.setDisable(true);
+        Socket socket = getInstance().getSocket();
 
         String output = getServerResponse(socket, "doubledown", "");
         // finished
@@ -198,44 +410,11 @@ public class GameController {
     public void holdBet(ActionEvent actionEvent) {
         // stay
 
-        Socket socket = SessionHandler.getInstance().getSocket();
-
-        doubleBtn.setDisable(true);
-        drawBtn.setDisable(true);
-        holdBtn.setDisable(true);
+        Socket socket = getInstance().getSocket();
 
         String output = getServerResponse(socket, "stay", "");
         // finishes round
         continueGame();
-    }
-
-    public void placeBet(ActionEvent actionEvent) {
-
-        int amount = 0;
-
-        try {
-            amount = Integer.parseInt(moneyInput.getText());
-        }
-        catch (Exception e){
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-
-            alert.setContentText("Only Integers are Allowed");
-
-            alert.showAndWait();
-            return;
-        }
-
-        if(amount > 100){
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-
-            alert.setContentText("Max 100");
-
-            alert.showAndWait();
-            return;
-        }
-
-        betAmount.set(amount);
-        money -= amount;
     }
 
     public void goHome(ActionEvent actionEvent) {
@@ -245,25 +424,17 @@ public class GameController {
     public void getPlayers(Socket socket){
         try {
             ObjectMapper mapper = new ObjectMapper();
-            // Prepare json
-            String jsonString = mapper.writeValueAsString(
-                    new MessageContent("getPlayers", "")
-            );
 
-            // prepare printStream
-            PrintStream printStream = new PrintStream(socket.getOutputStream(), true);
-            // send json
-            printStream.println(jsonString);
             // prepare reader
             BufferedReader clientReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             // wait for reader
             String output = clientReader.readLine();
 
-            MessageContent messageContent = mapper.readValue(output, MessageContent.class);
+            MessageContent messageContent = unwrapContent(output, MessageContent.class);
 
             String content = messageContent.content();
 
-            players = mapper.readValue(content, PlayerContent[].class);
+            players = unwrapContent(content, PlayerContent[].class);
         }
         catch (Exception e){
             e.printStackTrace();
@@ -275,9 +446,8 @@ public class GameController {
         String output = "error";
 
         try {
-            ObjectMapper mapper = new ObjectMapper();
             // Prepare json
-            String jsonString = mapper.writeValueAsString(
+            String jsonString = wrapObject(
                     new MessageContent(method, content)
             );
 
@@ -299,53 +469,37 @@ public class GameController {
 
     public void getCard(String output){
 
-        Socket socket = SessionHandler.getInstance().getSocket();
-        String myName = SessionHandler.getInstance().getUserName();
+        Socket socket = getInstance().getSocket();
+        String myName = getInstance().getUserName();
 
-        ObjectMapper mapper = new ObjectMapper();
+        MessageContent messageContent = unwrapContent(output, MessageContent.class);
 
-        try {
-            MessageContent messageContent = mapper.readValue(output, MessageContent.class);
+        String content = messageContent.content();
 
-            String content = messageContent.content();
+        Card extraCard = unwrapContent(content, Card.class);
 
-            Card extraCard = mapper.readValue(content, Card.class);
+        Player myPlayer = listOfPlayers.stream().filter(
+                player -> player.getName().equals(myName)).findFirst().get();
 
-            Player myPlayer = listOfPlayers.stream().filter(
-                    player -> player.getName().equals(myName)).findFirst().get();
-
-            myPlayer.addCard(extraCard);
-
-            // display card
-
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        myPlayer.addCard(extraCard);
     }
 
     public void continueGame(){
 
-        Socket socket = SessionHandler.getInstance().getSocket();
-        ObjectMapper mapper = new ObjectMapper();
+        Socket socket = getInstance().getSocket();
 
         try{
             BufferedReader clientReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String output = clientReader.readLine();
 
-            MessageContent messageContent = mapper.readValue(output, MessageContent.class);
+            MessageContent messageContent = unwrapContent(output, MessageContent.class);
 
             if(messageContent.method().equals("out")) {
-                doubleBtn.setDisable(true);
-                drawBtn.setDisable(true);
-                homeBtn.setDisable(true);
-                holdBtn.setDisable(true);
-                betBtn.setDisable(true);
-
+                // disable buttons
                 waitTillRoundEnd();
             }
             else {
-                drawBtn.setDisable(false);
-                holdBtn.setDisable(false);
+                // enable buttons
             }
         }
         catch(Exception e){
@@ -353,7 +507,112 @@ public class GameController {
         }
     }
 
-    public void waitTillRoundEnd(){
+    public void waitTillRoundEnd() {
+        Socket socket = getInstance().getSocket();
+        BufferedReader clientReader = null;
+        try {
+            clientReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        if (clientReader == null) {
+            return;
+        }
+
+        MessageContent messageContent = null;
+
+        do {
+            try {
+                messageContent = unwrapContent(clientReader.readLine(), MessageContent.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (messageContent == null) {
+                return;
+            }
+
+            switch (messageContent.method()) {
+                case "hit", "doubleDown" -> {
+                    PlayerCardContent playerCardContent =
+                            unwrapContent(messageContent.content(), PlayerCardContent.class); // one card
+
+                    listOfPlayers.stream().filter(
+                            player -> player.getName().equals(playerCardContent.name())
+                    ).findFirst().orElseThrow().getCards().add(playerCardContent.cards()[0]);
+
+                    updatePlayersFxml();
+                }
+                case "dealerAdd" -> {
+                    CardContent cardContent = unwrapContent(messageContent.content(), CardContent.class);
+
+                    dealerCards.add(cardContent.card());
+
+                    updateDealersFxml();
+                }
+                case "lost" -> {
+                    // TODO: show lost
+
+                }
+                case "blackjack" -> {
+                    // TODO: show blackjack
+                    money += betAmount * 5 / 2;
+
+                }
+                case "draw" -> {
+                    // TODO: show draw
+                    money += betAmount;
+                }
+                default -> {
+                }
+            }
+        } while (!messageContent.method().equalsIgnoreCase("take"));
+
+        listOfPlayers = null;
+        
+        if (isEnd(clientReader)) {
+            // TODO: END GAME
+            // TODO: FILL LEADERBOARD
+        } else {
+            startRound();
+        }
+    }
+    
+    private boolean isEnd(BufferedReader clientReader) {
+        try {
+            MessageContent messageContent = unwrapContent(clientReader.readLine(), MessageContent.class);
+            if (messageContent.method().equalsIgnoreCase("finish")) {
+                return true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public <T> T unwrapContent(String content, Class<T> contentClass) {
+        ObjectMapper mapper = new ObjectMapper();
+        T value = null;
+
+        try {
+            value = mapper.readValue(content, contentClass);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return value;
+    }
+
+    public String wrapObject(Object object) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

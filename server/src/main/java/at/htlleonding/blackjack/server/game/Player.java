@@ -68,9 +68,8 @@ public class Player {
         cards.add(card);
     }
 
-    public boolean distribute(List<Card> cards) {
+    public void distribute(List<Card> cards) {
         this.cards.addAll(cards);
-        return Card.getSum(cards) == 21;
     }
 
     public void stay() {
@@ -88,7 +87,7 @@ public class Player {
 
     public void triggerWin() {
         try {
-            client.sendMessage(ClientThreadHandler.mapper.writeValueAsString(new MessageContent("lost","")));
+            client.sendMessage(ClientThreadHandler.mapper.writeValueAsString(new MessageContent("win","")));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -102,7 +101,7 @@ public class Player {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        coins += bet * 3 / 2;
+        coins += bet * 5 / 2;
         bet = 0;
     }
 

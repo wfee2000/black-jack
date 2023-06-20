@@ -26,6 +26,8 @@ public class WaitingRoomController extends Thread{
     public volatile Button startButton;
 
     String output = "123";
+
+    String roomstate = "123";
     boolean isRoomFull = false;
 
     public WaitingRoomController(){
@@ -95,14 +97,13 @@ public class WaitingRoomController extends Thread{
                 // wait for reader
 
                 try {
-                    output = clientReader.readLine();
+                    roomstate = clientReader.readLine();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                if (output.length() == 3 && output.contains("/")) {
-                    isRoomFull = output.split("/")[0].equals(output.split("/")[1]);
+                if (roomstate.length() == 3 && roomstate.contains("/")) {
+                    isRoomFull = roomstate.split("/")[0].equals(roomstate.split("/")[1]);
                 }
-
             }
 
             startButton.setDisable(false);

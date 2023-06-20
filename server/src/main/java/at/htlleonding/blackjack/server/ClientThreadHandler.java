@@ -29,7 +29,7 @@ public class ClientThreadHandler extends Thread {
     private Dealer currentGame;
     private PrintWriter clientOut;
     private Call call;
-    private String name;
+    public String name;
     private boolean waitingForCall;
     private int bet;
     private boolean waitingForBet;
@@ -329,7 +329,7 @@ public class ClientThreadHandler extends Thread {
         // player in lobby
 
         if (!currentGame.hasStarted()) {
-            switch (command) {
+            switch (command.toLowerCase()) {
                 case "leave" -> {
                     if (currentGame.removePlayer(this)) {
                         clientMessagesOut.println("Success");
@@ -357,22 +357,22 @@ public class ClientThreadHandler extends Thread {
             return true;
         }
 
+        /*if(command.equals("getplayers")){
+
+            List<Player> players = currentGame.getPlayers();
+
+            MessageContent messageContent = new MessageContent("players", mapper.writeValueAsString(
+                    players.stream().map(player -> new PlayerContent(player.getClient().name)).toArray()
+            ));
+
+            clientMessagesOut.println(messageContent);
+
+            return true;
+        }*/
+
         // game started
 
         if (waitingForCall) {
-
-            if(command.equals("getplayers")){
-                List<Player> players = currentGame.getPlayers();
-
-                MessageContent messageContent = new MessageContent("players", mapper.writeValueAsString(
-                        players.stream().map(player -> new PlayerContent(player.getClient().getName()))
-                ));
-
-                clientMessagesOut.println(messageContent);
-
-                return true;
-            }
-
 
             if (Arrays.stream(Call.values()).anyMatch(call -> call.toString().equalsIgnoreCase(command))) {
                 call = Call.valueOf(command);
@@ -410,9 +410,16 @@ public class ClientThreadHandler extends Thread {
             waitingForCall = true;
             clientOut.println(request);
             waitingThread = currentThread();
-            wait();
-            return call;
-        } catch (InterruptedException | JsonProcessingException e) {
+            synchronized (this) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                return call;
+            }
+        } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
@@ -427,9 +434,17 @@ public class ClientThreadHandler extends Thread {
             waitingForBet = true;
             clientOut.println(request);
             waitingThread = currentThread();
-            wait();
-            return bet;
-        } catch (InterruptedException | JsonProcessingException e) {
+
+            synchronized (this) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                return bet;
+            }
+        } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }

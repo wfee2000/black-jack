@@ -78,7 +78,7 @@ public class Dealer {
     }
 
     public boolean start() {
-        if (hasStarted) {
+        if (hasStarted || players.size() != maxPlayers) {
             return false;
         }
 

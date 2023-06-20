@@ -29,7 +29,7 @@ public class ClientThreadHandler extends Thread {
     private Dealer currentGame;
     private PrintWriter clientOut;
     private Call call;
-    private String name;
+    public String name;
     private boolean waitingForCall;
     private int bet;
     private boolean waitingForBet;
@@ -365,7 +365,7 @@ public class ClientThreadHandler extends Thread {
                 List<Player> players = currentGame.getPlayers();
 
                 MessageContent messageContent = new MessageContent("players", mapper.writeValueAsString(
-                        players.stream().map(player -> new PlayerContent(player.getClient().getName()))
+                        players.stream().map(player -> new PlayerContent(player.getClient().name))
                 ));
 
                 clientMessagesOut.println(messageContent);

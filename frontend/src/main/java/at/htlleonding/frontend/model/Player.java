@@ -8,7 +8,8 @@ import java.util.List;
 public class Player {
 
     private List<Card> cards;
-    private String name;
+    private final String name;
+    private int bet;
 
     public Player(String name){
         this.name = name;
@@ -28,5 +29,13 @@ public class Player {
 
     public String getName() {
         return name;
+    }
+
+    public int getBet() {
+        return bet;
+    }
+
+    public void setBet(int bet) {
+        this.bet = bet;
     }
 }

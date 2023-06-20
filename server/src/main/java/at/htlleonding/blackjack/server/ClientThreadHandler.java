@@ -329,7 +329,7 @@ public class ClientThreadHandler extends Thread {
         // player in lobby
 
         if (!currentGame.hasStarted()) {
-            switch (command) {
+            switch (command.toLowerCase()) {
                 case "leave" -> {
                     if (currentGame.removePlayer(this)) {
                         clientMessagesOut.println("Success");
@@ -357,22 +357,22 @@ public class ClientThreadHandler extends Thread {
             return true;
         }
 
+        if(command.equals("getplayers")){
+
+            List<Player> players = currentGame.getPlayers();
+
+            MessageContent messageContent = new MessageContent("players", mapper.writeValueAsString(
+                    players.stream().map(player -> new PlayerContent(player.getClient().name)).toArray()
+            ));
+
+            clientMessagesOut.println(messageContent);
+
+            return true;
+        }
+
         // game started
 
         if (waitingForCall) {
-
-            if(command.equals("getplayers")){
-                List<Player> players = currentGame.getPlayers();
-
-                MessageContent messageContent = new MessageContent("players", mapper.writeValueAsString(
-                        players.stream().map(player -> new PlayerContent(player.getClient().name))
-                ));
-
-                clientMessagesOut.println(messageContent);
-
-                return true;
-            }
-
 
             if (Arrays.stream(Call.values()).anyMatch(call -> call.toString().equalsIgnoreCase(command))) {
                 call = Call.valueOf(command);

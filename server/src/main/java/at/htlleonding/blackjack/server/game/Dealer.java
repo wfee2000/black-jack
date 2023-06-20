@@ -41,7 +41,7 @@ public class Dealer {
             newPlayer.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
                     new MessageContent("update", ClientThreadHandler.mapper.writeValueAsString(
                             players.stream().map(playerInArray -> new PlayerContent(playerInArray.getClient()
-                                    .name).toArray()))));
+                                    .name)).toArray()))));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }

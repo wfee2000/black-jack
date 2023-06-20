@@ -41,7 +41,7 @@ public class Dealer {
             newPlayer.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
                     new MessageContent("update", ClientThreadHandler.mapper.writeValueAsString(
                             players.stream().map(playerInArray -> new PlayerContent(playerInArray.getClient()
-                                    .getName())).toArray()))));
+                                    .name).toArray()))));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -50,7 +50,7 @@ public class Dealer {
             try {
                 player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
                         new MessageContent("add", ClientThreadHandler.mapper.writeValueAsString(
-                                new PlayerContent(newPlayer.getClient().getName())))));
+                                new PlayerContent(newPlayer.getClient().name)))));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
@@ -69,7 +69,7 @@ public class Dealer {
                 player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
                         new MessageContent("update", ClientThreadHandler.mapper.writeValueAsString(
                                 players.stream().map(playerInArray -> new PlayerContent(playerInArray.getClient()
-                                        .getName())).toArray()))));
+                                        .name)).toArray()))));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
@@ -117,6 +117,16 @@ public class Dealer {
             });
         };
 
+        players.forEach(player -> {
+            try {
+                player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                        new MessageContent("players", ClientThreadHandler.mapper.writeValueAsString(players.
+                                stream().map(player1 -> new PlayerContent(player1.getClient().name)).toArray()))));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        });
+
         new Thread(runnable).start();
         return true;
     }
@@ -129,7 +139,7 @@ public class Dealer {
                 try {
                     notifyPlayers.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
                             new MessageContent("betted", ClientThreadHandler.mapper.writeValueAsString(
-                                    new PlayerBetContent(player.getClient().getName(), bet)))));
+                                    new PlayerBetContent(player.getClient().name, bet)))));
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
@@ -145,7 +155,7 @@ public class Dealer {
             try {
                 player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(new MessageContent("distributed",
                         ClientThreadHandler.mapper.writeValueAsString(players.stream()
-                                .map(playerCards -> new PlayerCardContent(playerCards.getClient().getName(),
+                                .map(playerCards -> new PlayerCardContent(playerCards.getClient().name,
                                         playerCards.getCards().toArray(new Card[0]))).toArray()))));
                 if (Card.getSum(player.getCards()) == 21) {
                     player.isOut(true);
@@ -168,7 +178,7 @@ public class Dealer {
                             try {
                                 notifyPlayer.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
                                         new MessageContent("hit", ClientThreadHandler.mapper.writeValueAsString(
-                                                new PlayerCardContent(player.getClient().getName(),
+                                                new PlayerCardContent(player.getClient().name,
                                                         new Card[]{newCard})))));
                             } catch (JsonProcessingException e) {
                                 e.printStackTrace();
@@ -182,7 +192,7 @@ public class Dealer {
                                 notifyPlayer.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
                                         new MessageContent("stay",
                                                 ClientThreadHandler.mapper.writeValueAsString(
-                                                        new PlayerContent(player.getClient().getName())))));
+                                                        new PlayerContent(player.getClient().name)))));
                             } catch (JsonProcessingException e) {
                                 e.printStackTrace();
                             }
@@ -195,7 +205,7 @@ public class Dealer {
                             try {
                                 notifyPlayer.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
                                         new MessageContent("doubleDown", ClientThreadHandler.mapper.writeValueAsString(
-                                                new PlayerCardContent(player.getClient().getName(),
+                                                new PlayerCardContent(player.getClient().name,
                                                         new Card[]{newCard})))));
                             } catch (JsonProcessingException e) {
                                 e.printStackTrace();

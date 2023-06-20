@@ -95,7 +95,7 @@ public class Dealer {
 
         Runnable runnable = () -> {
             for (int i = 0; i < rounds; i++) {
-                new Thread(this::executeRound);
+                executeRound();
 
                 players.forEach(player -> {
                     try {

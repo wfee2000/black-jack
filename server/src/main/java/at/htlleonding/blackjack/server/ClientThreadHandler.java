@@ -357,7 +357,7 @@ public class ClientThreadHandler extends Thread {
             return true;
         }
 
-        if(command.equals("getplayers")){
+        /*if(command.equals("getplayers")){
 
             List<Player> players = currentGame.getPlayers();
 
@@ -368,7 +368,7 @@ public class ClientThreadHandler extends Thread {
             clientMessagesOut.println(messageContent);
 
             return true;
-        }
+        }*/
 
         // game started
 

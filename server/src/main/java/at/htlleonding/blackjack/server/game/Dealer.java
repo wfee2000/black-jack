@@ -6,7 +6,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class Dealer {
     private final List<Player> players;
@@ -79,6 +78,10 @@ public class Dealer {
     }
 
     public boolean start() {
+        if (hasStarted) {
+            return false;
+        }
+
         hasStarted = true;
 
         players.forEach(player -> {
@@ -93,7 +96,25 @@ public class Dealer {
         Runnable runnable = () -> {
             for (int i = 0; i < rounds; i++) {
                 new Thread(this::executeRound);
+
+                players.forEach(player -> {
+                    try {
+                        player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                                new MessageContent("continue", "")));
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                });
             }
+
+            players.forEach(player -> {
+                try {
+                    player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
+                            new MessageContent("finish", "")));
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            });
         };
 
         new Thread(runnable).start();
@@ -117,12 +138,7 @@ public class Dealer {
         addDealerCard();
 
         players.forEach(player -> {
-            if (player.distribute(new ArrayList<>(cardStackTake.takeCards(2)))) {
-                player.isOut(true);
-                player.hasBlackJack(true);
-            } else {
-                player.isOut(false);
-            }
+            player.distribute(new ArrayList<>(cardStackTake.takeCards(2)));
         });
 
         players.forEach(player -> {
@@ -131,6 +147,12 @@ public class Dealer {
                         ClientThreadHandler.mapper.writeValueAsString(players.stream()
                                 .map(playerCards -> new PlayerCardContent(playerCards.getClient().getName(),
                                         playerCards.getCards().toArray(new Card[0]))).toArray()))));
+                if (Card.getSum(player.getCards()) == 21) {
+                    player.isOut(true);
+                    player.hasBlackJack(true);
+                } else {
+                    player.isOut(false);
+                }
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
@@ -197,15 +219,6 @@ public class Dealer {
                     player.triggerLoose();
                 } else {
                     player.triggerDraw();
-                }
-            });
-        } else {
-            players.forEach(player -> {
-                try {
-                    player.getClient().sendMessage(ClientThreadHandler.mapper.writeValueAsString(
-                            new MessageContent("no-blackjack?", "")));
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
                 }
             });
         }

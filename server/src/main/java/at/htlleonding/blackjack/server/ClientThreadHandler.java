@@ -410,9 +410,16 @@ public class ClientThreadHandler extends Thread {
             waitingForCall = true;
             clientOut.println(request);
             waitingThread = currentThread();
-            wait();
-            return call;
-        } catch (InterruptedException | JsonProcessingException e) {
+            synchronized (this) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                return call;
+            }
+        } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
@@ -427,9 +434,17 @@ public class ClientThreadHandler extends Thread {
             waitingForBet = true;
             clientOut.println(request);
             waitingThread = currentThread();
-            wait();
-            return bet;
-        } catch (InterruptedException | JsonProcessingException e) {
+
+            synchronized (this) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                return bet;
+            }
+        } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
